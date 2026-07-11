@@ -1,0 +1,1548 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>阅读打卡 · 三升四语文暑假衔接 v1.0</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root{
+    --ink:#2D5F4E;
+    --ink-deep:#1F4A3C;
+    --paper:#FBF8F0;
+    --paper-warm:#F5EEDC;
+    --vermilion:#C8553D;
+    --gold:#D4A574;
+    --jade:#7BAE8E;
+    --mist:#E8E0CE;
+    --text:#3A2E1F;
+    --text-soft:#6B5D4A;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
+  html,body{ font-family:'PingFang SC','Microsoft YaHei','微软雅黑',sans-serif; background:var(--paper); color:var(--text); line-height:1.5; }
+  body{
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(212,165,116,0.10) 0, transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(123,174,142,0.10) 0, transparent 42%);
+    min-height:100vh;
+  }
+  .font-brush{ font-family:'STKaiti','KaiTi','楷体',serif; font-weight:700; }
+  .font-kai{ font-family:'STKaiti','KaiTi','楷体',serif; }
+  .font-serif-cn{ font-family:'STSong','SimSun','宋体',serif; }
+
+  /* 加载提示 */
+  #loading{
+    position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--paper); z-index:9999; gap:16px;
+  }
+  #loading .book{ font-size:48px; animation:bounce 1s ease-in-out infinite; }
+  #loading .txt{ font-size:14px; color:var(--text-soft); }
+  @keyframes bounce{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  /* 布局 */
+  .app{ min-height:100vh; max-width:720px; margin:0 auto; padding:16px 16px 100px; }
+  .row{ display:flex; align-items:center; }
+  .between{ justify-content:space-between; }
+  .center{ justify-content:center; }
+  .col{ display:flex; flex-direction:column; }
+  .gap-1{ gap:4px; } .gap-2{ gap:8px; } .gap-3{ gap:12px; } .gap-4{ gap:16px; }
+  .mt-1{ margin-top:4px; } .mt-2{ margin-top:8px; } .mt-3{ margin-top:12px; } .mt-4{ margin-top:16px; } .mt-5{ margin-top:20px; }
+  .mb-1{ margin-bottom:4px; } .mb-2{ margin-bottom:8px; } .mb-3{ margin-bottom:12px; } .mb-4{ margin-bottom:16px; }
+  .flex-1{ flex:1; } .wrap{ flex-wrap:wrap; }
+  .text-center{ text-align:center; } .text-right{ text-align:right; }
+  .hidden{ display:none; }
+
+  /* 卡片 */
+  .card{
+    background:rgba(255,253,247,0.92);
+    border:1px solid var(--mist);
+    border-radius:20px;
+    box-shadow:0 6px 22px -10px rgba(45,95,78,0.18), 0 2px 6px -2px rgba(45,95,78,0.08);
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card-warm{
+    background:linear-gradient(135deg, rgba(245,238,220,0.96), rgba(251,248,240,0.96));
+    border:1px solid var(--gold);
+  }
+  .card-tight{ padding:16px; }
+
+  /* 按钮 */
+  .btn{
+    border:none; cursor:pointer; font-family:inherit; font-weight:700;
+    border-radius:16px; padding:14px 20px; font-size:15px;
+    transition:transform .12s ease; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    min-height:48px;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-block{ width:100%; }
+  .btn-primary{ background:linear-gradient(135deg, var(--ink), var(--ink-deep)); color:var(--paper); box-shadow:0 6px 16px -6px rgba(31,74,60,0.5); }
+  .btn-vermilion{ background:linear-gradient(135deg, #D9674E, #C8553D); color:#FFF7EE; box-shadow:0 6px 16px -6px rgba(200,85,61,0.55); }
+  .btn-ghost{ background:rgba(255,253,247,0.6); border:1.5px solid var(--ink); color:var(--ink); }
+  .btn-sm{ padding:8px 14px; font-size:13px; min-height:40px; border-radius:12px; }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  /* 印章 */
+  .ink-stamp{
+    display:inline-flex;align-items:center;justify-content:center;
+    border:2px solid var(--vermilion);color:var(--vermilion);
+    font-family:'STKaiti','KaiTi','楷体',serif; font-weight:700;
+    transform:rotate(-6deg);
+    border-radius:6px;
+    background:rgba(200,85,61,0.04);
+  }
+
+  /* 标签 */
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;
+  }
+
+  /* 底部导航 */
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:40;
+    max-width:720px; margin:0 auto; padding:8px 16px 12px;
+  }
+  .bottom-nav-inner{
+    background:rgba(255,253,247,0.95);
+    border:1px solid var(--mist);
+    border-radius:20px;
+    box-shadow:0 -4px 20px -8px rgba(45,95,78,0.2);
+    display:flex; justify-content:space-around; align-items:center;
+    padding:8px 4px;
+    backdrop-filter:blur(8px);
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 8px;border-radius:14px;font-size:11px;font-weight:600;
+    color:var(--text-soft); cursor:pointer; border:none; background:none;
+    font-family:inherit; min-width:52px; transition:all .2s ease;
+  }
+  .nav-item.active{ color:var(--ink); background:rgba(45,95,78,0.08); }
+  .nav-item.active .nav-ico{ background:var(--ink); color:var(--paper); }
+  .nav-ico{
+    width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    background:rgba(45,95,78,0.06);color:var(--text-soft);font-size:18px;
+    transition:all .2s ease;
+  }
+
+  /* 分段选择 */
+  .seg{ display:inline-flex; background:rgba(45,95,78,0.08); border-radius:12px; padding:3px; flex-wrap:wrap; gap:2px; }
+  .seg button{
+    padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--text-soft);
+    transition:all .15s ease; border:none; background:none; cursor:pointer; font-family:inherit;
+  }
+  .seg button.on{ background:var(--paper); color:var(--ink); box-shadow:0 2px 6px -2px rgba(0,0,0,0.12); }
+
+  /* 热力图 */
+  .heat-cell{
+    width:100%; aspect-ratio:1; border-radius:6px; background:rgba(45,95,78,0.06);
+    transition:transform .12s ease; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600;
+  }
+  .heat-1{ background:rgba(123,174,142,0.55); color:#fff; }
+  .heat-2{ background:rgba(123,174,142,0.8); color:#fff; }
+  .heat-3{ background:rgba(45,95,78,0.7); color:#fff; }
+  .heat-4{ background:var(--ink); color:#fff; }
+  .heat-today{ outline:2px solid var(--vermilion); outline-offset:1px; }
+
+  /* 输入框 */
+  textarea, input[type=text], input[type=number], input[type=password], input[type=date]{
+    width:100%;background:rgba(255,253,247,0.7);border:1.5px solid var(--mist);
+    border-radius:14px;padding:12px 14px;font-size:15px;color:var(--text);
+    font-family:inherit;resize:vertical;
+  }
+  textarea:focus, input:focus{ outline:none;border-color:var(--ink); background:#FFFDF7; }
+
+  /* 进度环 */
+  .ring-progress{
+    --p:0;
+    width:140px;height:140px;border-radius:50%;
+    background:conic-gradient(var(--ink) calc(var(--p)*1%), rgba(45,95,78,0.12) 0);
+    display:flex;align-items:center;justify-content:center;position:relative;
+    margin:0 auto;
+  }
+  .ring-progress::before{
+    content:'';position:absolute;inset:10px;border-radius:50%;background:var(--paper);
+  }
+  .ring-progress > div{ position:relative;z-index:1; text-align:center; }
+  .timer-num{ font-variant-numeric:tabular-nums; }
+
+  /* 动画 */
+  .pop-in{ animation:popIn .4s cubic-bezier(.18,.89,.32,1.28); }
+  @keyframes popIn{ from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+  .fade-in{ animation:fadeIn .5s ease; }
+  @keyframes fadeIn{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .streak-flame{ animation:flame 1.6s ease-in-out infinite; display:inline-block; }
+  @keyframes flame{ 0%,100%{transform:translateY(0) rotate(-3deg) scale(1)} 50%{transform:translateY(-3px) rotate(3deg) scale(1.08)} }
+
+  /* 滚动条 */
+  .scrollbar-thin::-webkit-scrollbar{ width:6px;height:6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb{ background:rgba(45,95,78,0.25);border-radius:3px; }
+  .scrollbar-thin::-webkit-scrollbar-track{ background:transparent; }
+  .max-h-64{ max-height:256px; overflow-y:auto; }
+
+  /* 徽章 */
+  .badge-medal{
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    background:radial-gradient(circle at 30% 30%, #F0D9A8, #D4A574 60%, #B8893F);
+    box-shadow:0 6px 14px -4px rgba(180,137,63,0.6), inset 0 2px 4px rgba(255,255,255,0.5);
+    border:2px solid #E8C896; margin:0 auto;
+  }
+  .badge-locked{
+    background:rgba(45,95,78,0.08);box-shadow:none;border:2px dashed rgba(45,95,78,0.25);
+    filter:grayscale(1);opacity:0.6;
+  }
+
+  /* 分隔线 */
+  .seal-divider{
+    display:flex;align-items:center;gap:10px;color:var(--ink);font-family:'STKaiti','KaiTi','楷体',serif;font-weight:700;font-size:15px;
+  }
+  .seal-divider::before,.seal-divider::after{
+    content:'';flex:1;height:1px;background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  /* 书脊 */
+  .book-spine{ width:6px; border-radius:3px; align-self:stretch; }
+
+  /* 进度条 */
+  .progress-bar{ height:8px; border-radius:4px; background:rgba(45,95,78,0.12); overflow:hidden; }
+  .progress-bar > div{ height:100%; border-radius:4px; background:linear-gradient(90deg, var(--jade), var(--ink)); transition:width .5s ease; }
+
+  /* 网格 */
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .grid-7{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .grid-ach{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+
+  /* 文本 */
+  .text-xs{ font-size:12px; } .text-sm{ font-size:14px; } .text-lg{ font-size:18px; } .text-xl{ font-size:20px; } .text-2xl{ font-size:24px; } .text-3xl{ font-size:30px; }
+  .font-bold{ font-weight:700; } .font-semi{ font-weight:600; }
+  .text-soft{ color:var(--text-soft); } .text-ink{ color:var(--ink); } .text-vermilion{ color:var(--vermilion); } .text-gold{ color:var(--gold); } .text-jade{ color:var(--jade); }
+  .leading-tight{ line-height:1.2; }
+  .truncate{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .min-w-0{ min-width:0; }
+
+  /* 柱状图 */
+  .bar-wrap{ display:flex; align-items:flex-end; justify-content:space-between; gap:6px; height:140px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .bar-track{ width:100%; border-radius:6px 6px 0 0; background:rgba(45,95,78,0.06); flex:1; display:flex; align-items:flex-end; min-height:40px; }
+  .bar-fill{ width:100%; border-radius:6px 6px 0 0; min-height:4px; transition:height .5s ease; }
+
+  @media (max-width:380px){
+    .grid-ach{ grid-template-columns:repeat(2,1fr); }
+    .text-3xl{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="book">📖</div>
+  <div class="txt">正在加载阅读打卡…</div>
+</div>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+// ============ 主题数据：四上教材 8 周阅读计划 ============
+const SUMMER_PLAN = [
+  { week:1, day:1, unit:'第一单元·写景', text:'观潮', genre:'写景散文', minutes:30,
+    focus:'重点词语：奇观、农历、据说、宽阔、滚动、顿时、逐渐、犹如、浩浩荡荡、山崩地裂',
+    textContent:'【第3-5自然段·潮来时】本段描写潮水来时的壮观景象。先写午后远处传来闷雷般的响声，江面依然风平浪静；接着写一条白线从远处涌来，越近越快，犹如千万匹白色战马齐头并进；最后写潮头奔腾西去，声音如同山崩地裂。按"远→近"的顺序，从声音、形状两方面写出大潮的天下奇观。',
+    task:'预习第3-5自然段（潮来时），圈画描写潮水声音、样子的句子，熟读2遍',
+    book:'《山海经》', pages:'1-95 页',
+    classical:'习作美文好段 · 写潮水', clText:'那浪潮越来越近，犹如千万匹白色战马齐头并进，浩浩荡荡地飞奔而来；那声音如同山崩地裂，好像大地都被震得颤动起来。', clTr:'赏析：用"千万匹白色战马"比喻浪潮，写出潮水的气势磅礴；"山崩地裂"形容声音巨大。可仿写瀑布、暴雨等壮观景象。'
+  },
+  { week:1, day:2, unit:'第一单元·写景', text:'观潮', genre:'写景散文', minutes:30,
+    focus:'重点词语：若隐若现、人山人海、昂首东望、闷雷滚动、风平浪静、水天相接',
+    textContent:'【第6自然段·潮去后】本段写潮头过去后的情景。潮头奔腾西去，余波还在漫天卷地般涌来，江面恢复平静。按"潮来→潮去"的顺序，用动与静的对比，突出钱塘江大潮的壮观与余韵。',
+    task:'预习第6自然段（潮去后），背诵"霎时，潮头奔腾西去……"一段',
+    book:'《山海经》', pages:'96-190 页',
+    classical:'习作美文好段 · 写水静', clText:'钱塘江大潮，自古以来被称为天下奇观。宽阔的钱塘江横卧在眼前，江面很平静，越往东越宽，在雨后的阳光下，笼罩着一层蒙蒙的薄雾。', clTr:'赏析：先总起"天下奇观"，再写江面"平静""薄雾"，动静对比突出奇。可仿写湖面、河面等景物。'
+  },
+  { week:1, day:3, unit:'第一单元·写景', text:'走月亮', genre:'写景散文', minutes:30,
+    focus:'重点词语：溪岸、淘洗、牵扶、闪烁、坑坑洼洼、浇灌、庄稼、风俗',
+    textContent:'【第3-5自然段】本段写"我"和阿妈在溪边走月亮时见到的景物。先写溪水淘洗着卵石，溪水映着月光；再写山草和果园里的果香；最后写庄稼地里的情景。按"溪水→山草→果园→庄稼"的顺序，用拟人和排比写出月夜的柔和与母女亲情。',
+    task:'预习第3-5自然段，圈画"我"和阿妈走月亮时见到的景物（溪水、山草、果园）',
+    book:'《山海经》', pages:'191-285 页',
+    classical:'习作美文好段 · 写月光', clText:'月儿是那样明亮，月光是那样柔和，照亮了高高的点苍山，照亮了村头的大青树，也照亮了村间的大道和小路……', clTr:'赏析：用排比句"照亮了……照亮了……照亮了……"写出月光的柔和与广阔，富有韵律感。可仿写阳光、灯光等。'
+  },
+  { week:1, day:4, unit:'第一单元·写景', text:'走月亮', genre:'写景散文', minutes:30,
+    focus:'重点词语：柔和、春稻、新鲜、修筑、完工、满意、招待',
+    textContent:'【第6-9自然段】本段反复出现"我和阿妈走月亮"，写"我"和阿妈走过溪岸、田埂，闻到果香和庄稼的气息，听到秋虫鸣叫。情感层层递进，由景入情，最后以"多么奇妙的夜晚"作结，表达对母爱的体会。',
+    task:'预习第6-9自然段，背诵"我和阿妈走月亮"抒情段落，体会亲情',
+    book:'《山海经》', pages:'286-380 页',
+    classical:'习作美文好段 · 写亲情', clText:'多么奇妙的夜晚啊，我和阿妈走月亮！有时，阿妈给我讲月亮里面的故事……此时，阿妈牵着我，我闻到了阿妈身上的气息。', clTr:'赏析：反复出现"我和阿妈走月亮"，情感层层递进；用"气息"传递母爱。可仿写与亲人散步、游玩的温馨场景。'
+  },
+  { week:1, day:5, unit:'第一单元·写景', text:'现代诗二首', genre:'诗歌', minutes:30,
+    focus:'重点词语：归巢、芦苇、剪秋罗、霸占、滴溜溜、眠、压',
+    textContent:'【现代诗二首】本课含《秋晚的江上》和《花牛歌》两首诗。《秋晚的江上》写归巢的鸟儿驮着斜阳，双翅一翻把斜阳掉在江上，头白的芦苇妆成一瞬的红颜；《花牛歌》四节分别写花牛在草地里坐、眠、走、做梦，每节都以拟人手法呈现一幅童趣画面。',
+    task:'预习《秋晚的江上》全诗，背诵《花牛歌》四节，圈画拟人句',
+    book:'《中国古代神话》', pages:'1-84 页',
+    classical:'习作美文好段 · 写夕阳', clText:'归巢的鸟儿，尽管是倦了，还驮着斜阳回去。双翅一翻，把斜阳掉在江上；头白的芦苇，也妆成一瞬的红颜了。', clTr:'赏析：用"驮""翻""妆成"等动词把鸟儿、芦苇拟人化，画面感极强。可仿写黄昏、傍晚的景象。'
+  },
+  { week:1, day:6, unit:'第一单元·写景', text:'繁星', genre:'写景散文', minutes:30,
+    focus:'重点词语：密密麻麻、星群密布、半明半昧、摇摇欲坠、梦幻、怀抱',
+    textContent:'【第3自然段·海上看星】本段写作者在海上舱面看星空的情景。先写深蓝天空悬着半明半昧的星；再写船动星也动，星星低得摇摇欲坠；最后写海上的夜是柔和、静寂、梦幻的。按"看星→感星→抒情"的顺序，写出星空的梦幻之美。',
+    task:'预习第3自然段（海上看星），背诵"海上的夜是柔和的，是静寂的，是梦幻的"',
+    book:'《中国古代神话》', pages:'85-168 页',
+    classical:'习作美文好段 · 写星空', clText:'深蓝色的天空里悬着无数半明半昧的星。船在动，星也在动，它们是这样低，真是摇摇欲坠呢！', clTr:'赏析：用"悬""摇摇欲坠"写出星星的灵动，动静结合。可仿写夜空、星河等。'
+  },
+  { week:1, day:7, unit:'第一单元·写景', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习本周重点词语：奇观、浩浩荡荡、闪烁、坑坑洼洼、半明半昧、摇摇欲坠',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《观潮》《走月亮》《现代诗二首》《繁星》，重点复习圈画的好句和背诵段落。',
+    task:'默写《走月亮》抒情段、《繁星》第3自然段；背诵《花牛歌》全诗',
+    book:'《中国古代神话》', pages:'169-252 页',
+    classical:'习作美文好段 · 写景总句', clText:'这里的景色真美啊！远处的山连绵起伏，像一条巨龙蜿蜒在大地上；近处的水清澈见底，像一面明亮的镜子。', clTr:'赏析：用"像……像……"两个比喻句总写山水之美，结构清晰。适合作为写景作文的开头。'
+  },
+  { week:2, day:1, unit:'第二单元·提问', text:'一个豆荚里的五粒豆', genre:'童话', minutes:30,
+    focus:'重点词语：豌豆、按照、舒适、黑暗、恐惧、僵硬、丰满、等待',
+    textContent:'【第1-10自然段】本段写一个豆荚里的五粒豆即将出发。五粒豆各有不同的愿望：最大的要飞向广大的世界，第二粒要直接飞到太阳里，第三粒想哪儿就睡哪儿，第四颗滚了一半就睡了，最小的那粒说"该怎么样就怎么样"。为后文第五粒豆的故事做铺垫。',
+    task:'预习第1-10自然段，圈画五粒豆不同的"愿望"，提出2个问题',
+    book:'《中国古代神话》', pages:'253-336 页',
+    classical:'习作美文好段 · 写生长', clText:'小豌豆发了芽，长出了绿油油的叶子，顺着窗台向上爬，越爬越高，最后开出一朵紫色的小花。生病的小姑娘看着它，眼睛里渐渐有了光。', clTr:'赏析：按"发芽—长叶—爬藤—开花"的顺序写生长，层次分明。可仿写植物生长、春笋发芽等。'
+  },
+  { week:2, day:2, unit:'第二单元·提问', text:'一个豆荚里的五粒豆', genre:'童话', minutes:30,
+    focus:'重点词语：虚弱、兴奋、爬、窗、阳光、温暖、绽放',
+    textContent:'【第13-21自然段·第五粒豆】本段写第五粒豆落到窗台裂缝里发芽开花，给生病的小姑娘带来希望和快乐。先写豌豆发芽长叶爬藤开花，再写小姑娘看着它眼睛有了光，最后写小姑娘健康起来。借豌豆的生长写希望的力量。',
+    task:'预习第13-21自然段（第五粒豆和小姑娘），写2句读后感受',
+    book:'《中国古代神话》', pages:'337-420 页',
+    classical:'习作美文好段 · 写希望', clText:'那粒豌豆射向空中，落到了一个窗台下的裂缝里。它躺在那里，并不灰心，它想："我要生长，我要开花！"——这小小的生命，竟成了一个病孩的全部快乐。', clTr:'赏析：用豌豆的"不灰心"反衬希望的珍贵，情感真挚。可仿写鼓励他人、逆境成长等。'
+  },
+  { week:2, day:3, unit:'第二单元·提问', text:'蝙蝠和雷达', genre:'说明文', minutes:30,
+    focus:'重点词语：蝙蝠、清朗、捕捉、铃铛、苍蝇、证明、障碍物',
+    textContent:'【第4-6自然段·科学家实验】本段写科学家揭密蝙蝠夜间飞行的三次实验。第一次蒙眼睛，铃铛一个没响；第二次塞耳朵，铃铛响个不停；第三次封嘴，铃铛也响个不停。证明蝙蝠飞行靠嘴和耳朵配合探路，而不是靠眼睛。',
+    task:'预习第4-6自然段（科学家实验），梳理3次实验的过程，提出2个问题',
+    book:'《希腊神话故事》', pages:'1-90 页',
+    classical:'习作美文美段 · 写实验', clText:'科学家把蝙蝠的眼睛蒙上，让它在拉满铃铛的屋子里飞。蝙蝠飞了半天，铃铛一个也没响。原来，蝙蝠飞行不是靠眼睛，而是靠嘴和耳朵。', clTr:'赏析：用"蒙上""拉满""一个也没响"等词把实验过程写清楚，可仿写科学小实验、观察记录等。'
+  },
+  { week:2, day:4, unit:'第二单元·提问', text:'蝙蝠和雷达', genre:'说明文', minutes:30,
+    focus:'重点词语：荧光屏、雷达、无线电、模仿、探路、配合',
+    textContent:'【第7自然段·仿生原理】本段写雷达模仿蝙蝠探路原理的工作过程。雷达通过天线发出无线电波，电波遇到障碍物反射回来显示在荧光屏上。按"发出→遇到→反射→显示"的顺序，说清蝙蝠与雷达的仿生联系。',
+    task:'预习第7自然段，梳理"蝙蝠→雷达"的仿生学原理，背诵原理段',
+    book:'《希腊神话故事》', pages:'91-180 页',
+    classical:'习作美文好段 · 写原理', clText:'雷达通过天线发出无线电波，电波遇到障碍物就反射回来，显示在荧光屏上。驾驶员从雷达的荧光屏上，能够看清楚前方有没有障碍物。', clTr:'赏析：用"发出—遇到—反射—显示"动词链说清原理，条理分明。可仿写"为什么……"的科普说明。'
+  },
+  { week:2, day:5, unit:'第二单元·提问', text:'呼风唤雨的世纪', genre:'说明文', minutes:30,
+    focus:'重点词语：呼风唤雨、世纪、技术、发明、改变、程控、寄托',
+    textContent:'【第2-3自然段】本段用设问句"是谁呼风唤雨呢？是谁改变了人类生活呢？是现代科学技术"开头，对比农耕时代和20世纪的生活，突出科技带来的巨大变化。结构上先设问引出，再列举成就，条理分明。',
+    task:'预习第2-3自然段，找2处设问句并体会作用，提出2个问题',
+    book:'《希腊神话故事》', pages:'181-270 页',
+    classical:'习作美文好段 · 写变化', clText:'20世纪，人类登上月球，潜入深海，洞察百亿光年外的天体，探索原子核世界的奥秘；20世纪，电视、程控电话、因特网以及民航飞机、高速火车、远洋船舶等，日益把人类居住的星球变成联系紧密的"地球村"。', clTr:'赏析：用排比列举20世纪的科技成就，气势磅礴。可仿写家乡变化、学校变化等。'
+  },
+  { week:2, day:6, unit:'第二单元·提问', text:'呼风唤雨的世纪', genre:'说明文', minutes:30,
+    focus:'重点词语：原子核、哲学、忽然、依靠、跨越、驱使',
+    textContent:'【第4自然段】本段对比古今生活的变化。先写古人靠农耕生活的局限，再写20世纪人类登月潜海、发明电视电话网络的成就，最后引用"忽如一夜春风来，千树万树梨花开"点明变化之快。',
+    task:'预习第4自然段，对比古今生活变化，背诵"忽如一夜春风来，千树万树梨花开"',
+    book:'《希腊神话故事》', pages:'271-360 页',
+    classical:'习作美文好段 · 设问开头', clText:'是谁呼风唤雨呢？是谁改变了人类的生活呢？是现代科学技术。正是这些发明和发现，使人类的生活大大改观。', clTr:'赏析：用两个设问句开头，自问自答，引出下文，引人入胜。可仿写"是谁……？是……"作为作文开头。'
+  },
+  { week:2, day:7, unit:'第二单元·提问', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习重点词语：豌豆、障碍物、呼风唤雨、程控、寄托、跨越',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《一个豆荚里的五粒豆》《蝙蝠和雷达》《呼风唤雨的世纪》，重点复习提问策略和原理段落。',
+    task:'默写"蝙蝠→雷达"原理段；背诵"忽如一夜春风来"诗句',
+    book:'《山海经》', pages:'1-95 页',
+    classical:'习作美文好段 · 写动物外形', clText:'小兔子一身雪白的毛，远远看去像一团棉花。它那长长的耳朵竖在头顶，一有动静就转来转去；红宝石般的眼睛嵌在毛茸茸的脸上，可爱极了。', clTr:'赏析：用"像一团棉花""红宝石般"两个比喻写外形，生动形象。可仿写小猫、小狗等宠物。'
+  },
+  { week:3, day:1, unit:'第三单元·观察', text:'古诗三首', genre:'古诗', minutes:30,
+    focus:'重点字词：暮、瑟、缘、降、骚、阁、逊',
+    textContent:'《题西林壁》\n横看成岭侧成峰，远近高低各不同。\n不识庐山真面目，只缘身在此山中。',
+    task:'预习《题西林壁》，注释重点字，背诵全诗，体会"不识庐山真面目"的道理',
+    book:'《山海经》', pages:'96-190 页',
+    classical:'习作美文好段 · 写山景', clText:'横看成岭侧成峰，远近高低各不同。不识庐山真面目，只缘身在此山中。', clTr:'赏析：前两句写山的多姿多彩，后两句蕴含"当局者迷"的道理。可借鉴这种"写景+说理"的结构写作文。'
+  },
+  { week:3, day:2, unit:'第三单元·观察', text:'古诗三首', genre:'古诗', minutes:30,
+    focus:'重点字词：题、壁、横、侧、峰、各、同',
+    textContent:'《暮江吟》\n一道残阳铺水中，半江瑟瑟半江红。\n可怜九月初三夜，露似真珠月似弓。\n\n《雪梅》\n梅雪争春未肯降，骚人搁笔费评章。\n梅须逊雪三分白，雪却输梅一段香。',
+    task:'预习《暮江吟》《雪梅》，背诵其一，写2句蕴含的道理',
+    book:'《山海经》', pages:'191-285 页',
+    classical:'习作美文好段 · 写夕阳水景', clText:'一道残阳铺水中，半江瑟瑟半江红。可怜九月初三夜，露似真珠月似弓。', clTr:'赏析："瑟瑟""红"写夕阳下江水的颜色，"真珠""弓"用比喻写露珠和月亮。可仿写傍晚水景。'
+  },
+  { week:3, day:3, unit:'第三单元·观察', text:'爬山虎的脚', genre:'说明文', minutes:30,
+    focus:'重点词语：操场、嫩红、舒服、均匀、重叠、空隙、茎柄',
+    textContent:'【第2-3自然段·叶子和脚】本段细致观察爬山虎的叶子和脚。先写叶子：嫩红变嫩绿，绿得新鲜，叶尖一顺儿朝下，铺得均匀没有重叠也不留空隙；再写脚的位置（茎上长叶柄的反面）、形状（像蜗牛的触角）、颜色（嫩红）。按"叶子→脚"的顺序写连续观察。',
+    task:'预习第2自然段（叶子）和第3自然段（脚的形状），圈画位置、形状、颜色',
+    book:'《山海经》', pages:'286-380 页',
+    classical:'习作美文好段 · 写植物叶', clText:'爬山虎的嫩叶不大引人注意，引人注意的是长大了的叶子。那些叶子绿得那么新鲜，看着非常舒服。叶尖一顺儿朝下，在墙上铺得那么均匀，没有重叠起来的，也不留一点儿空隙。', clTr:'赏析：用"一顺儿朝下""均匀""没有重叠"等词细致观察叶子，可仿写观察树叶、花瓣等。'
+  },
+  { week:3, day:4, unit:'第三单元·观察', text:'爬山虎的脚', genre:'说明文', minutes:30,
+    focus:'重点词语：蜗牛、枯萎、触、巴、拉、贴、爬',
+    textContent:'【第4自然段·爬的过程】本段写爬山虎是怎样一脚一脚往上爬的。用"触→变（小圆片）→巴住墙→弯曲→拉一把→紧贴"的动词链，把爬山虎爬墙的过程写得清楚生动，体现连续细致的观察。',
+    task:'预习第4自然段，圈画爬山虎"爬"的6个动词，体会连续观察',
+    book:'《任大霖散文选》', pages:'1-75 页',
+    classical:'习作美文好段 · 写动词链', clText:'爬山虎的脚触着墙的时候，六七根细丝的头上就变成小圆片，巴住墙。细丝原先是直的，现在弯曲了，把爬山虎的嫩茎拉一把，使它紧贴在墙上。', clTr:'赏析：用"触→变→巴→弯→拉→贴"动词链，把爬山虎"爬"的过程写得清楚生动。可仿写动作过程。'
+  },
+  { week:3, day:5, unit:'第三单元·观察', text:'蟋蟀的住宅', genre:'说明文', minutes:30,
+    focus:'重点词语：住宅、隐蔽、慎重、选择、住址、挖掘、搜索',
+    textContent:'【第2-5自然段·选址】本段写蟋蟀与众不同的选址方式。先写别的昆虫在临时的隐蔽所藏身，蟋蟀却"不肯随遇而安"；再写它慎重选择住址，要排水优良、有温和阳光；最后写它自己挖掘，不利用现成的洞穴。用拟人手法把蟋蟀写得像建筑师。',
+    task:'预习第2-5自然段，圈画蟋蟀选址的词句，找3处拟人句',
+    book:'《任大霖散文选》', pages:'76-150 页',
+    classical:'习作美文好段 · 写拟人', clText:'别的昆虫大多在临时的隐蔽所藏身。蟋蟀和它们不同，不肯随遇而安。它常常慎重地选择住址，一定要排水优良，并且有温和的阳光。', clTr:'赏析：用"不肯随遇而安""慎重地选择"把蟋蟀拟人化，仿佛一位挑剔的建筑师。可仿写小动物做窝。'
+  },
+  { week:3, day:6, unit:'第三单元·观察', text:'蟋蟀的住宅', genre:'说明文', minutes:30,
+    focus:'重点词语：堤岸、隧道、倾斜、立刻、简朴、粗糙',
+    textContent:'【第6-9自然段·建造过程】本段写蟋蟀建住宅的过程。先写大体在十月动工，用前足扒土、钳子搬土块、后足踏地、锯推土铺开；再写住宅内部（大厅、卧室）和外部（平台）的布置；最后写长时间整修。按"工具→过程→内部→整修"的顺序写。',
+    task:'预习第6-9自然段，梳理蟋蟀建住宅的过程，写2句感受',
+    book:'《任大霖散文选》', pages:'151-225 页',
+    classical:'习作美文好段 · 写连续观察', clText:'蟋蟀盖房子大多是在十月。它用前足扒土，还用钳子搬掉较大的土块。它用强有力的后足踏地。后腿上有两排锯，用它将泥土推到后面，倾斜地铺开。', clTr:'赏析：用"扒、搬、踏、推、铺"动词写建造过程，按顺序写清楚。可仿写蚂蚁搬家、蜘蛛结网等。'
+  },
+  { week:3, day:7, unit:'第三单元·观察', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习重点词语：均匀、空隙、茎柄、隐蔽、慎重、挖掘、简朴',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《古诗三首》《爬山虎的脚》《蟋蟀的住宅》，重点复习观察方法和古诗背诵。',
+    task:'默写《题西林壁》《暮江吟》；背诵爬山虎"爬"的动词链段落',
+    book:'《任大霖散文选》', pages:'226-300 页',
+    classical:'习作美文好段 · 写观察日记', clText:'今天，我发现豆芽又长高了一截。它那嫩黄的茎顶着两片小小的叶子，像一把小伞。我量了量，足足有5厘米高了！昨天它还蜷缩在豆皮里，今天就挺直了腰，真神奇。', clTr:'赏析：用"今天""昨天"写出时间变化，用"量了量"写具体观察，用比喻写形象。可仿写观察日记。'
+  },
+  { week:4, day:1, unit:'第四单元·神话', text:'盘古开天地', genre:'神话故事', minutes:30,
+    focus:'重点词语：黑暗、混沌、翻身、缓缓、上升、下降、血液',
+    textContent:'【第2-3自然段·开天】本段写盘古开天地的经过。先写宇宙混沌如大鸡蛋，盘古睡了一万八千年；再写盘古醒来拿斧头劈开天地，轻而清的东西上升为天，重而浊的东西下降为地；最后写他头顶天脚踏地，天每天升高一丈，盘古也越长越高。按"睡→劈→撑"的顺序写起因和经过。',
+    task:'预习第2-3自然段（盘古开天），梳理起因、经过、结果',
+    book:'《一只窝囊的大老虎》', pages:'1-74 页',
+    classical:'习作美文好段 · 写想象', clText:'很久很久以前，天和地还没有分开，宇宙混沌一片，像个大鸡蛋。有个叫盘古的巨人，在混沌之中睡了一万八千年。', clTr:'赏析：用"很久很久以前""大鸡蛋""一万八千年"营造神话的神奇感。可仿写童话、神话故事的开头。'
+  },
+  { week:4, day:2, unit:'第四单元·神话', text:'盘古开天地', genre:'神话故事', minutes:30,
+    focus:'重点词语：汗毛、茂盛、滋润、雷声、日月、四季、五岳',
+    textContent:'【第5自然段·身化万物】本段写盘古倒下后身体化作万物。用排比句写：气息变风云，声音变雷声，左眼变太阳，右眼变月亮，四肢变四极，肌肤变大地，血液变江河，汗毛变花草树木，汗水变雨露。气势磅礴，富有想象。',
+    task:'预习第5自然段（盘古身化万物），找盘古身体变化的5处描写并背诵',
+    book:'《一只窝囊的大老虎》', pages:'75-148 页',
+    classical:'习作美文好段 · 排比想象', clText:'他呼出的气息变成了四季的风和飘动的云；他发出的声音化作了隆隆的雷声；他的左眼变成了太阳，照耀大地，他的右眼变成了月亮，给夜晚带来光明。', clTr:'赏析：用排比句写盘古身体的变化，气势磅礴，富有想象。可仿写"变成……变成……变成……"的排比。'
+  },
+  { week:4, day:3, unit:'第四单元·神话', text:'精卫填海', genre:'文言文', minutes:30,
+    focus:'重点字词：帝、曰、少女、溺、返、衔（文言实词）',
+    textContent:'《精卫填海》\n炎帝之少女，名曰女娃。女娃游于东海，溺而不返，故为精卫。常衔西山之木石，以堙于东海。',
+    task:'预习全文，标停顿，注释重点字，熟读成诵',
+    book:'《一只窝囊的大老虎》', pages:'149-220 页',
+    classical:'习作美文好段 · 写人物品质', clText:'炎帝之少女，名曰女娃。女娃游于东海，溺而不返，故为精卫。常衔西山之木石，以堙于东海。', clTr:'译文：炎帝的小女儿女娃，在东海溺水未归，化作精卫鸟，常衔西山木石填东海。可体会精卫坚韧不拔的精神，用于写"坚持""勇敢"的作文素材。'
+  },
+  { week:4, day:4, unit:'第四单元·神话', text:'精卫填海', genre:'文言文', minutes:30,
+    focus:'重点字词：堙、东海、西山、木石、常、故',
+    textContent:'《精卫填海》\n炎帝之少女，名曰女娃。女娃游于东海，溺而不返，故为精卫。常衔西山之木石，以堙于东海。',
+    task:'背诵全文，写2句精卫的精神（坚韧不拔、矢志不渝）',
+    book:'《牛的写意》', pages:'1-87 页',
+    classical:'习作美文好段 · 写坚持', clText:'精卫虽小，志气却大。它日复一日，年复一年，衔着小小的树枝和石子，飞向茫茫大海。大海笑它傻，它不回头；风浪阻它路，它不退缩。这小小的生灵，竟有这般不屈的意志！', clTr:'赏析：用"日复一日""年复一年"写时间久，用"笑它傻""不回头"对比突出坚持。可仿写"坚持"主题作文。'
+  },
+  { week:4, day:5, unit:'第四单元·神话', text:'普罗米修斯', genre:'神话故事', minutes:30,
+    focus:'重点词语：悲惨、情景、危险、惩罚、盗取、饶恕',
+    textContent:'【第1-4自然段·盗火起因经过】本段写普罗米修斯盗火的起因和经过。先写他看到人类没有火、生活悲惨，决心冒险盗取火种；再写他从太阳神阿波罗那里盗取火种带给人类；最后写人类有了火能吃熟食、驱寒冷、赶猛兽。按"见悲惨→决心→盗火→造福"的因果链展开。',
+    task:'预习第1-4自然段，梳理普罗米修斯盗火的起因、经过、结果',
+    book:'《牛的写意》', pages:'88-174 页',
+    classical:'习作美文好段 · 写勇敢', clText:'普罗米修斯看到人类没有火的悲惨情景，决心冒着生命危险，到太阳神阿波罗那里去盗取火种。他不怕宙斯的惩罚，因为他知道，有了火，人类就能吃熟食，驱寒冷，赶猛兽。', clTr:'赏析：用"看到……决心……不怕……"的因果链写出普罗米修斯的勇敢和无私。可仿写英雄人物。'
+  },
+  { week:4, day:6, unit:'第四单元·神话', text:'普罗米修斯', genre:'神话故事', minutes:30,
+    focus:'重点词语：锁链、凶恶、啄食、屈服、坚决、甘愿',
+    textContent:'【第7-8自然段·受罚】本段写普罗米修斯受罚的情景。宙斯派火神惩罚他，火神劝他认错被拒，于是普罗米修斯被死死锁在悬崖上，日夜遭受风吹雨淋，还被鹫鹰啄食肝脏，但他始终不屈服，甘愿为人类受苦。突出他无私无畏的献身精神。',
+    task:'预习第7-8自然段（受罚），对比普罗米修斯和盘古的献身精神',
+    book:'《牛的写意》', pages:'175-260 页',
+    classical:'习作美文好段 · 写献身', clText:'普罗米修斯的双手和双脚戴着铁环，被死死地锁在高高的悬崖上。他不能动弹，也不能睡觉，日夜遭受着风吹雨淋的痛苦。可是，他始终不屈服，甘愿为人类受苦。', clTr:'赏析：用"死死地锁""不能……也不能……"写惩罚之重，用"始终不屈服"突出意志坚定。可仿写英雄事迹。'
+  },
+  { week:4, day:7, unit:'第四单元·神话', text:'月度检测', genre:'月测', minutes:30,
+    focus:'月度重点字词复习：混沌、血液、茂盛、溺、衔、盗取、惩罚、饶恕',
+    textContent:'月度重点文段回顾，请翻阅课本本月所学第四单元神话故事《盘古开天地》《精卫填海》《普罗米修斯》，重点复习神话故事的人物和精神。',
+    task:'月度模拟小卷：看拼音写词语+选音+仿写+课内阅读+短篇习作',
+    book:'《猎人笔记》', pages:'1-100 页',
+    classical:'习作美文好段 · 神话人物群像', clText:'盘古以身化万物，普罗米修斯盗火受罚，精卫衔石填海，女娲炼石补天。这些神话人物，或开天辟地，或为民请命，或矢志不渝，或拯救苍生——他们的精神，如同夜空中最亮的星，照亮了华夏儿女的心灵。', clTr:'赏析：用排比概括四位神话人物的事迹，用"如同……星"比喻精神。可仿写"人物群像"式作文段落。'
+  },
+  { week:5, day:1, unit:'第五单元·写事', text:'麻雀', genre:'记叙文', minutes:30,
+    focus:'重点词语：打猎、猛烈、拍打、嘴角、呆呆、无可奈何',
+    textContent:'【第4-5自然段·老麻雀救小麻雀】本段写老麻雀奋不顾身救小麻雀的经过。先写猎狗走近小麻雀，小麻雀呆呆地无可奈何；再写老麻雀像石头似的落下来，扎煞起羽毛绝望地尖叫，想用身躯掩护小麻雀。按"起因→经过"的顺序写出紧张和母爱。',
+    task:'预习第4-5自然段（老麻雀救小麻雀），梳理起因、经过、结果',
+    book:'《猎人笔记》', pages:'101-200 页',
+    classical:'习作美文好段 · 写紧张', clText:'突然，一只老麻雀从一棵树上飞下来，像一块石头似的落在猎狗面前。它扎煞起全身的羽毛，绝望地尖叫着，想用自己的身躯掩护小麻雀。', clTr:'赏析：用"像一块石头似的"比喻写出速度之快，用"扎煞""绝望地尖叫"写出紧张。可仿写紧张时刻。'
+  },
+  { week:5, day:2, unit:'第五单元·写事', text:'麻雀', genre:'记叙文', minutes:30,
+    focus:'重点词语：绒毛、掩护、拯救、庞大、安然、浑身',
+    textContent:'【第6-7自然段】本段写猎狗后退和"我"唤回猎狗的结局。一种强大的力量使庞大的猎狗慢慢后退，"我"急忙唤回猎狗。点明这强大的力量就是母爱和勇气，情感升华，令人感动。',
+    task:'预习第6-7自然段，写2句读后感受（母爱/勇气），背诵"一种强大的力量"',
+    book:'《猎人笔记》', pages:'201-300 页',
+    classical:'习作美文好段 · 写母爱', clText:'可是它不能安然地站在高高的没有危险的树枝上，一种强大的力量使它飞了下来。这力量，是母爱；这力量，是勇气；这力量，让庞大的猎狗也慢慢后退了。', clTr:'赏析：用"这力量，是……"排比点明母爱和勇气，情感升华。可仿写母爱、亲情类作文结尾。'
+  },
+  { week:5, day:3, unit:'第五单元·写事', text:'爬天都峰', genre:'记叙文', minutes:30,
+    focus:'重点词语：假日、云彩、山顶、发颤、奋力、攀着',
+    textContent:'【第2-6自然段·爬山经过】本段写"我"爬天都峰的过程。先写"我"看到又高又陡的天都峰发颤、犹豫；再写遇到老爷爷互相鼓舞；最后写"我"奋力攀着铁链手脚并用向上爬。按"畏难→鼓舞→攀登"的顺序写事，突出坚持和借力。',
+    task:'预习第2-6自然段（爬山经过），梳理"我"爬天都峰的过程',
+    book:'《猎人笔记》', pages:'301-400 页',
+    classical:'习作美文好段 · 写动作', clText:'我奋力向峰顶爬去，一会儿攀着铁链上，一会儿手脚并用向上爬，像小猴子一样……', clTr:'赏析：用"一会儿……一会儿……"写动作变化，用"像小猴子一样"比喻生动。可仿写爬山、爬树等动作。'
+  },
+  { week:5, day:4, unit:'第五单元·写事', text:'爬天都峰', genre:'记叙文', minutes:30,
+    focus:'重点词语：鲫鱼、纪念、犹豫、鼓舞、汲取、终于',
+    textContent:'【第7-10自然段·登顶与启示】本段写登顶后的情景和启示。先写"我"和老爷爷终于爬上峰顶，互相鼓舞；再写站在峰顶往下看云海翻腾；最后点明从老爷爷身上汲取了力量，明白坚持就能成功。按"结果→感受→启示"的顺序写。',
+    task:'预习第7-10自然段，写2句读后感受（坚持/借力），背诵"汲取力量"段',
+    book:'《中国传统节日故事图画书》', pages:'1-67 页',
+    classical:'习作美文好段 · 写启示', clText:'老爷爷和我互相鼓舞，终于都爬上了天都峰顶。站在峰顶，我往下看，云海翻腾，真险啊！我从老爷爷身上汲取了力量，这一刻，我明白了：只要坚持，再高的山也能爬上去。', clTr:'赏析：先写结果"爬上"，再写感受"往下看"，最后点明启示。可仿写"做事—感悟"的写事作文。'
+  },
+  { week:5, day:5, unit:'第五单元·写事', text:'习作：生活小事', genre:'习作', minutes:30,
+    focus:'重点词语：起因、经过、结果、时间、地点、人物',
+    textContent:'【写作要点】写一件事要交代清楚六要素：时间、地点、人物、起因、经过、结果。重点写经过，可分2段详写。开头可用"今天早上……"点明时间，结尾用"这件事让我明白……"点明启示。',
+    task:'预习"交流平台"，学习"把事情写清楚"的6要素，列一件小事的提纲',
+    book:'《中国传统节日故事图画书》', pages:'68-134 页',
+    classical:'习作美文好段 · 写事开头', clText:'今天早上，我正在写作业，突然听到"啪"的一声，原来是弟弟把妈妈最心爱的花瓶打碎了。弟弟吓得呆呆地站在那里，不知怎么办才好。', clTr:'赏析：用"今天早上"点明时间，用"突然听到"引出事件，开篇就抓住读者。可仿写"一件小事"的开头。'
+  },
+  { week:5, day:6, unit:'第五单元·写事', text:'习作：生活小事', genre:'习作', minutes:30,
+    focus:'重点词语：开头、中间、结尾、分段、清楚、完整',
+    textContent:'【写作要点】按4段提纲写生活小事：第一段起因（时间地点人物），第二段经过1（事情的开始），第三段经过2（事情的发展），第四段结果（结局+启示）。注意分段清楚、经过具体、结尾点明道理。',
+    task:'按4段提纲（起因—经过1—经过2—结果）写一篇生活小事小练笔',
+    book:'《中国传统节日故事图画书》', pages:'135-200 页',
+    classical:'习作美文好段 · 写事结尾', clText:'看着妈妈捧着粘好的花瓶，脸上露出了笑容，我心里也松了一口气。这件事让我明白：做错事不可怕，可怕的是不敢承认。从那以后，我学会了做一个诚实的孩子。', clTr:'赏析：用"看着……露出笑容"写结果，用"这件事让我明白"点明启示。可仿写写事作文的结尾。'
+  },
+  { week:5, day:7, unit:'第五单元·写事', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习重点词语：猛烈、无可奈何、掩护、拯救、奋力、汲取',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《麻雀》《爬天都峰》及习作"生活小事"，重点复习写事六要素和经过的写法。',
+    task:'默写《麻雀》"强大的力量"段；修改本周小练笔',
+    book:'《我要做好孩子》', pages:'1-80 页',
+    classical:'习作美文好段 · 写事过渡', clText:'事情虽然过去很久了，但每当我想起那一幕，心里还是暖暖的。那是一个冬天的傍晚，北风呼呼地刮着，我和妈妈走在回家的路上……', clTr:'赏析：用"事情虽然过去很久了"承上启下，用"那是一个冬天的傍晚"自然过渡到回忆。可仿写回忆式过渡。'
+  },
+  { week:6, day:1, unit:'第六单元·童年', text:'牛和鹅', genre:'记叙文', minutes:30,
+    focus:'重点词语：甚至、顽皮、故意、脖子、惹怒、大概',
+    textContent:'【第3-7自然段】本段写"我"对牛和鹅态度的反差。先写"我们"欺负牛却怕鹅；再写回家路上遇到鹅，"我们"贴着墙壁悄悄地走，心里很害怕。用动作和心理描写烘托紧张，为后文金奎叔摔鹅做铺垫。',
+    task:'预习第3-7自然段，梳理"我"对牛和鹅态度的变化，做3处批注',
+    book:'《我要做好孩子》', pages:'81-160 页',
+    classical:'习作美文好段 · 写心理', clText:'我们马上都不说话了，贴着墙壁，悄悄地走过去。我的心里很害怕，怕它们看见了我们要追过来。', clTr:'赏析：用"不说话""贴着""悄悄地"写动作，用"心里很害怕"直接写心理，烘托紧张。可仿写害怕的心情。'
+  },
+  { week:6, day:2, unit:'第六单元·童年', text:'牛和鹅', genre:'记叙文', minutes:30,
+    focus:'重点词语：昏晕、摆脱、衣襟、欺负、金奎叔、摔',
+    textContent:'【第8-11自然段·金奎叔摔鹅】本段写金奎叔摔鹅及"我"的感悟。先写鹅欺负"我"，金奎叔一把抓住鹅摔了出去；再写金奎叔说"它要凭本事欺负人，咱们可不答应"；最后写"我"明白换个角度看问题。借人物语言点明道理。',
+    task:'预习第8-11自然段（金奎叔摔鹅），写2句"换个角度看问题"的体会',
+    book:'《我要做好孩子》', pages:'161-240 页',
+    classical:'习作美文好段 · 写感悟', clText:'金奎叔说："让它这样看好了！可是它要是凭这种本事欺负人，咱们可不答应！"直到现在，我还记着金奎叔的话。', clTr:'赏析：用人物语言点明道理，用"直到现在，我还记着"写出感悟的深刻。可仿写"一句话让我明白"的感悟段。'
+  },
+  { week:6, day:3, unit:'第六单元·童年', text:'一只窝囊的大老虎', genre:'记叙文', minutes:30,
+    focus:'重点词语：殷切、期待、撇嘴、发霉、半晌、豁虎跳',
+    textContent:'【第3-13自然段·排练】本段写"我"排练老虎的过程和心情变化。先写"我"被选上饰演老虎却不会豁虎跳，被同学嘲笑撇嘴；再写"我"笨拙地排练，紧张又委屈。用心理和神态描写写"我"从期待到失落的起伏。',
+    task:'预习第3-13自然段（排练），梳理"我"排练时的心情变化，做3处批注',
+    book:'《我要做好孩子》', pages:'241-320 页',
+    classical:'习作美文好段 · 写紧张', clText:'终于轮到我上场了。我紧张得心怦怦直跳，脸涨得通红。我笨拙地爬上场，"啊呜"一声，台下哄堂大笑。我的脸更红了，恨不得找个地洞钻进去。', clTr:'赏析：用"心怦怦直跳""脸涨得通红"写紧张，用"恨不得找地洞钻"夸张写尴尬。可仿写上台表演的紧张。'
+  },
+  { week:6, day:4, unit:'第六单元·童年', text:'一只窝囊的大老虎', genre:'记叙文', minutes:30,
+    focus:'重点词语：霉糖、撇开、掌声、哄堂大笑、笨拙、紧张',
+    textContent:'【第14-19自然段·演出】本段写"我"演出的经过。先写终于轮到上场，"我"紧张得心怦怦直跳，笨拙爬上场"啊呜"一声引得哄堂大笑；再写"我"脸红得想找地洞钻。用夸张和动作描写写童年的尴尬趣事。',
+    task:'预习第14-19自然段（演出），写2句自己的童年趣事',
+    book:'《狼王梦》', pages:'1-95 页',
+    classical:'习作美文好段 · 写童年趣事', clText:'童年的趣事就像天上的星星，数也数不清。其中最亮的一颗，就是我学老虎的那次演出。虽然演砸了，但每次想起来，我都会忍不住笑出声来。', clTr:'赏析：用"像天上的星星"比喻童年趣事之多，用"最亮的一颗"自然引出回忆。可仿写童年趣事的开头。'
+  },
+  { week:6, day:5, unit:'第六单元·童年', text:'陀螺', genre:'记叙文', minutes:30,
+    focus:'重点词语：冰尜儿、金枪鱼、得心应手、妩媚、毫无怨言',
+    textContent:'【第4-10自然段·斗陀螺】本段写斗陀螺的经过和心情变化。先写"我"的陀螺出场被嘲笑，圆头圆脑像丑小鸭，"我"脸红到耳根很沮丧；再写比赛时"我"的陀螺却奋勇旋转击败对手。写出从失落到惊喜的心情转变。',
+    task:'预习第4-10自然段（斗陀螺），找作者心情变化的句子，做3处批注',
+    book:'《狼王梦》', pages:'96-190 页',
+    classical:'习作美文好段 · 写心情变化', clText:'我的陀螺刚一出场，就惹得大家哈哈大笑——它圆头圆脑，像个丑小鸭。我的脸顿时红到了耳根，心里别提多沮丧了。', clTr:'赏析：用"圆头圆脑""像丑小鸭"写陀螺的"丑"，用"脸红到耳根""别提多沮丧"写心情。可仿写从失落到惊喜的心情变化。'
+  },
+  { week:6, day:6, unit:'第六单元·童年', text:'陀螺', genre:'记叙文', minutes:30,
+    focus:'重点词语：旋转、奋勇、溃败、荣誉、自豪、人不可貌相',
+    textContent:'【第11-13自然段·启示】本段写"我"胜利后的感受和启示。先写这是辉煌的时刻，"我"尝到胜利的甜头；再点明甜头里有自豪、喜悦，更有"人不可貌相，海水不可斗量"的深刻道理。用排比升华情感。',
+    task:'预习第11-13自然段，写2句读后感受（人不可貌相/自信），背诵"人不可貌相"',
+    book:'《狼王梦》', pages:'191-285 页',
+    classical:'习作美文好段 · 写启示', clText:'这真是个辉煌的时刻！我尝到了胜利的甜头。这甜头里，有自豪，有喜悦，更有"人不可貌相，海水不可斗量"的深刻道理。', clTr:'赏析：用"这真是个……时刻"总起，用"有……有……更有……"排比升华。可仿写"这件事让我明白"的启示段。'
+  },
+  { week:6, day:7, unit:'第六单元·童年', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习重点词语：惹怒、昏晕、殷切、豁虎跳、妩媚、溃败',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《牛和鹅》《一只窝囊的大老虎》《陀螺》，重点复习批注式阅读和心情变化的写法。',
+    task:'默写《陀螺》"人不可貌相"段；做批注式阅读3篇',
+    book:'《狼王梦》', pages:'286-380 页',
+    classical:'习作美文好段 · 写童年回忆', clText:'童年的时光，像一条叮咚作响的小溪，清澈而欢快。溪水里，有我笨拙的"老虎"步，有我旋转的陀螺，有我和小伙伴的欢声笑语……这些，是我最珍贵的记忆。', clTr:'赏析：用"像一条小溪"总起，用"有……有……有……"排比列举童年记忆，富有画面感。可仿写童年回忆类作文。'
+  },
+  { week:7, day:1, unit:'第七单元·爱国', text:'古诗三首', genre:'古诗', minutes:30,
+    focus:'重点字词：塞、秦、征、还、辞、骨、项、杰',
+    textContent:'《出塞》\n秦时明月汉时关，万里长征人未还。\n但使龙城飞将在，不教胡马度阴山。\n\n《凉州词》\n黄河远上白云间，一片孤城万仞山。\n羌笛何须怨杨柳，春风不度玉门关。',
+    task:'预习《出塞》《凉州词》，背诵其一，体会戍边将士的思乡之情',
+    book:'《时代广场的蟋蟀》', pages:'1-60 页',
+    classical:'习作美文好段 · 写爱国志向', clText:'生当作人杰，死亦为鬼雄。至今思项羽，不肯过江东。', clTr:'赏析：李清照借项羽宁死不屈的精神，表达爱国志向。可借鉴这种"借古人明志"的写法，写"我的志向"类作文。'
+  },
+  { week:7, day:2, unit:'第七单元·爱国', text:'古诗三首', genre:'古诗', minutes:30,
+    focus:'重点字词：长征、万岁、未还、龙城、飞将、人杰、鬼雄',
+    textContent:'《夏日绝句》\n生当作人杰，死亦为鬼雄。\n至今思项羽，不肯过江东。',
+    task:'预习《夏日绝句》，写2句体会（生当作人杰），背诵全诗',
+    book:'《时代广场的蟋蟀》', pages:'61-120 页',
+    classical:'习作美文好段 · 写志向', clText:'我要像周恩来总理那样，"为中华之崛起而读书"；我要像岳飞那样，精忠报国；我要像钱学森那样，把毕生所学献给祖国。这，就是我的志向。', clTr:'赏析：用排比列举三位爱国人物，用"这，就是我的志向"总结。可仿写"我的志向"类作文。'
+  },
+  { week:7, day:3, unit:'第七单元·爱国', text:'为中华之崛起而读书', genre:'记叙文', minutes:30,
+    focus:'重点词语：严肃、清晰、抱负、胸怀、出租、惩处、模范',
+    textContent:'【第1-7自然段·立志】本段写少年周恩来立志的过程。先写修身课上魏校长问"为什么而读书"，同学答为明理、为做官；再写周恩来清晰而坚定地答"为中华之崛起而读书"；最后点明他立志的背景是目睹中华不振。按"问→答→原因"的顺序写立志。',
+    task:'预习第1-7自然段，梳理少年周恩来立志的原因（目睹中华不振）',
+    book:'《时代广场的蟋蟀》', pages:'121-180 页',
+    classical:'习作美文好段 · 写立志', clText:'那天上修身课，魏校长向全班同学提出一个问题："请问诸生为什么而读书？"周恩来站了起来，清晰而坚定地回答："为中华之崛起而读书！"', clTr:'赏析：用对话写出立志场景，用"清晰而坚定"修饰回答，突出少年周恩来的胸怀。可仿写立志类作文。'
+  },
+  { week:7, day:4, unit:'第七单元·爱国', text:'为中华之崛起而读书', genre:'记叙文', minutes:30,
+    focus:'重点词语：酒馆、吵嚷、振奋、中华不振、崛起、效仿',
+    textContent:'【第8-11自然段·目睹中华不振】本段写周恩来目睹中华不振的经过。先写他在租界看到中国妇女受外国人欺负，巡警反训斥中国人；再写这件事深深刺痛了少年周恩来，促使他立下"为中华之崛起而读书"的远大志向。',
+    task:'预习第8-11自然段，写2句自己的读书志向，背诵"为中华之崛起而读书"',
+    book:'《亲爱的汉修先生》', pages:'1-67 页',
+    classical:'习作美文好段 · 写读书目的', clText:'有人为光宗耀祖而读书，有人为明理而读书，有人为做官而读书。而少年周恩来，却说出了"为中华之崛起而读书"的豪言壮语。这一句话，穿越百年，依然振奋人心。', clTr:'赏析：用"有人……有人……有人……"对比衬托周恩来的远大志向。可仿写"我为什么读书"的作文。'
+  },
+  { week:7, day:5, unit:'第七单元·爱国', text:'梅兰芳蓄须', genre:'记叙文', minutes:30,
+    focus:'重点词语：旦角、拒绝、签订、骚扰、要求、忍受',
+    textContent:'【第2-5自然段·拒演方法】本段写梅兰芳拒演的方法。先写日军占领上海后他躲避演出；再写藏、避、蓄须、打针四种方法——深居简出、避走香港、蓄起胡须明志、甚至给自己打针装病发烧。突出他宁可卖房度日也拒演的民族气节。',
+    task:'预习第2-5自然段，梳理梅兰芳拒演的方法（藏、避、蓄须、打针）',
+    book:'《亲爱的汉修先生》', pages:'68-134 页',
+    classical:'习作美文好段 · 写气节', clText:'梅兰芳先生是闻名世界的京剧表演艺术家。可是，在日本侵略者占领上海的那些日子里，他蓄须明志，拒绝为敌人演出，宁可卖房度日，也绝不登台。', clTr:'赏析：用"闻名世界"与"卖房度日"对比，突出梅兰芳的民族气节。可仿写"我敬佩的人"类作文。'
+  },
+  { week:7, day:6, unit:'第七单元·爱国', text:'梅兰芳蓄须', genre:'记叙文', minutes:30,
+    focus:'重点词语：坚持、香港、随时、胜利、蓄须、民族气节',
+    textContent:'【第6-8自然段·坚持胜利】本段写梅兰芳坚持到胜利。先写他随时准备牺牲也不登台，靠卖房度日熬过艰难岁月；再写抗战胜利后他剃掉胡须重新登台，台下掌声雷动。用对比突出他用蓄须守住了民族尊严。',
+    task:'预习第6-8自然段，写2句读后感受（气节/坚持），背诵"蓄须明志"',
+    book:'《亲爱的汉修先生》', pages:'135-200 页',
+    classical:'习作美文好段 · 写民族气节', clText:'梅兰芳的胡子，是民族的尊严；梅兰芳的沉默，是无声的抗议。他用一支胡子，守住了中国人的骨气；他用一段沉默，谱写了艺术家的良知。', clTr:'赏析：用"是……是……"对仗写胡子和沉默的象征意义，气势铿锵。可仿写人物精神品质的赞美段。'
+  },
+  { week:7, day:7, unit:'第七单元·爱国', text:'本周复盘', genre:'周测', minutes:30,
+    focus:'复习重点词语：抱负、胸怀、惩处、模范、骚扰、蓄须',
+    textContent:'本周重点文段回顾，请翻阅课本本周所学《古诗三首》《为中华之崛起而读书》《梅兰芳蓄须》，重点复习爱国主题和立志写法。',
+    task:'默写《夏日绝句》《出塞》；做爱国主题阅读3篇',
+    book:'《一千零一夜》', pages:'1-100 页',
+    classical:'习作美文好段 · 写英雄', clText:'古有项羽不肯过江东，今有周恩来立志振兴中华；古有岳飞精忠报国，今有梅兰芳蓄须明志。这些英雄人物，如同历史长河中的璀璨星辰，照亮了我们前行的路。', clTr:'赏析：用"古有……今有……"对仗列举古今英雄，用"璀璨星辰"比喻。可仿写"我最敬佩的人"类作文。'
+  },
+  { week:8, day:1, unit:'第八单元·历史', text:'王戎不取道旁李', genre:'文言文', minutes:30,
+    focus:'重点字词：尝、看、竞、走、唯、信、然（文言实词）',
+    textContent:'《王戎不取道旁李》\n王戎七岁，尝与诸小儿游。看道边李树多子折枝，诸儿竞走取之，唯戎不动。人问之，答曰："树在道边而多子，此必苦李。"取之，信然。',
+    task:'预习全文，标停顿，注释重点字，理解"取之，信然"',
+    book:'《一千零一夜》', pages:'101-200 页',
+    classical:'习作美文好段 · 写思考', clText:'王戎七岁，尝与诸小儿游。看道边李树多子折枝，诸儿竞走取之，唯戎不动。人问之，答曰："树在道边而多子，此必苦李。"取之，信然。', clTr:'译文：王戎七岁时，看到道边李子树果实累累，其他孩子争相去摘，唯独王戎不动。他说："树在道边而多子，必是苦李。"摘来一尝，果然如此。可体会善于观察思考的品质。'
+  },
+  { week:8, day:2, unit:'第八单元·历史', text:'王戎不取道旁李', genre:'文言文', minutes:30,
+    focus:'重点字词：诸儿、取之、信然、树在道边、多子、必苦',
+    textContent:'《王戎不取道旁李》\n王戎七岁，尝与诸小儿游。看道边李树多子折枝，诸儿竞走取之，唯戎不动。人问之，答曰："树在道边而多子，此必苦李。"取之，信然。',
+    task:'背诵全文，写2句王戎的聪明之处（观察+推理）',
+    book:'《一千零一夜》', pages:'201-300 页',
+    classical:'习作美文好段 · 写推理', clText:'为什么王戎不摘李子？因为他善于观察和思考。他看到李子长在路边，果实累累却没人摘，便推断："这一定是苦李。"事实证明，他是对的。', clTr:'赏析：用设问句开头引发思考，用"观察→推断→验证"的链条说理。可仿写"我学会了思考"类作文。'
+  },
+  { week:8, day:3, unit:'第八单元·历史', text:'西门豹治邺', genre:'记叙文', minutes:30,
+    focus:'重点词语：老大、娶媳妇、逼着、旱灾、提心吊胆、求饶',
+    textContent:'【第9-12自然段·惩治巫婆】本段写西门豹惩治巫婆官绅的方法。先写西门豹以"姑娘不漂亮"为由把巫婆投进漳河；再写又要把官绅头子投进去催一催；最后写官绅吓得磕头求饶，百姓明白河伯娶媳妇是骗局。用"将计就计"的智慧破除迷信。',
+    task:'预习第9-12自然段（惩治巫婆），梳理西门豹惩治巫婆官绅的方法',
+    book:'《一千零一夜》', pages:'301-400 页',
+    classical:'习作美文好段 · 写惩治', clText:'西门豹对巫婆说："不行，这个姑娘不漂亮，河伯不会满意的。麻烦你去跟河伯说一声，说我会另外选个漂亮的，过几天就送去。"说完，他叫卫士把巫婆投进了漳河。', clTr:'赏析：用西门豹的话"将计就计"，表面顺从实则惩治，写出了他的智慧。可仿写"机智应对"的写事段落。'
+  },
+  { week:8, day:4, unit:'第八单元·历史', text:'西门豹治邺', genre:'记叙文', minutes:30,
+    focus:'重点词语：淌血、灌溉、收成、田地、开凿、渠道',
+    textContent:'【第13-15自然段·开凿渠道】本段写西门豹开凿渠道的经过和成效。先写西门豹带领百姓开凿渠道，引漳河水灌溉农田；再写百姓从不理解到受益，邺地年年丰收。按"惩治→开渠→丰收"的因果链写西门豹的智慧与为民。',
+    task:'预习第13-15自然段，写2句读后感受（智慧/为民），体会惩治与开渠',
+    book:'《一千零一夜》', pages:'401-500 页',
+    classical:'习作美文好段 · 写智慧', clText:'西门豹治邺，没有用蛮力，而是用智慧。他用"河伯娶媳妇"的迷信惩治了巫婆官绅，又带领百姓开凿渠道，引漳河水灌溉农田。从此，邺地年年丰收，百姓安居乐业。', clTr:'赏析：用"没有……而是……"对比，用"惩治→开凿→丰收"的因果链写西门豹的智慧。可仿写"智慧"主题作文。'
+  },
+  { week:8, day:5, unit:'第八单元·历史', text:'故事二则', genre:'记叙文', minutes:30,
+    focus:'重点词语：扁鹊、拜见、皮肤、理睬、汤药、医治',
+    textContent:'【扁鹊治病】本则写扁鹊四次拜见蔡桓公的过程。扁鹊依次指出病在皮肤、皮肉、肠胃、骨髓，蔡桓公都不听不信，最后病入骨髓无药可救。按病情加深的顺序写，警示"防微杜渐"的道理。',
+    task:'预习《扁鹊治病》，梳理扁鹊四次拜见蔡桓公的过程，体会"防微杜渐"',
+    book:'《追踪小绿人》三部曲', pages:'1-120 页',
+    classical:'习作美文好段 · 写防微杜渐', clText:'扁鹊第一次拜见蔡桓公，说他的病在皮肤，不治会加重。蔡桓公不听。后来，病从皮肤发展到皮肉，再到肠胃，最后到骨髓，无药可救。', clTr:'赏析：按"皮肤→皮肉→肠胃→骨髓"的顺序写病情加重，警示"防微杜渐"。可仿写"小问题不解决会变大错误"的作文。'
+  },
+  { week:8, day:6, unit:'第八单元·历史', text:'故事二则', genre:'记叙文', minutes:30,
+    focus:'重点词语：纪昌、注视、扎针、聚精会神、眨眼、视力',
+    textContent:'【纪昌学射】本则写纪昌向飞卫学射箭的过程。先写飞卫让他练眼力——盯织布机的踏板不眨眼；再写把虱子看成车轮大小；最后写纪昌苦练三年成了百发百中的神箭手。按"先……再……"的顺序写"持之以恒"。',
+    task:'预习《纪昌学射》，梳理纪昌练眼力的两个阶段，体会"持之以恒"',
+    book:'《追踪小绿人》三部曲', pages:'121-240 页',
+    classical:'习作美文好段 · 写持之以恒', clText:'纪昌向飞卫学射箭。飞卫让他先练眼力——盯着织布机的踏板不眨眼，再把虱子看成车轮大小。纪昌苦练了三年，终于成了百发百中的神箭手。', clTr:'赏析：用"先……再……"写练眼力的两个阶段，用"苦练三年"突出持之以恒。可仿写"我学会了……"的作文。'
+  },
+  { week:8, day:7, unit:'第八单元·历史', text:'月度检测·结业', genre:'月测', minutes:30,
+    focus:'月度重点字词复习：尝、竞走、唯、信然、提心吊胆、防微杜渐、持之以恒',
+    textContent:'月度重点文段回顾，请翻阅课本本月所学第八单元《王戎不取道旁李》《西门豹治邺》《故事二则》，重点复习文言文和历史故事。',
+    task:'月度模拟小卷+全册回顾：拼音+选音+仿写+课内阅读+短篇习作',
+    book:'《追踪小绿人》三部曲', pages:'241-360 页',
+    classical:'习作美文好段 · 结业寄语', clText:'8周的暑假预习，我们走过写景、神话、观察、写事、童年、爱国、历史，积累了56个好段。这些好段，像一颗颗珍珠，串起了我们的语言之链。愿你在新的学期，妙笔生花，文采飞扬！', clTr:'赏析：用"像一颗颗珍珠"比喻积累的好段，用"串起语言之链"总结收获。可仿写"学期总结""成长回顾"类作文结尾。'
+  }
+];
+
+const GENRE_COLORS = {
+  '写景散文':{bg:'#7BAE8E',text:'#1F4A3C'},
+  '诗歌':{bg:'#D4A574',text:'#7A5A2A'},
+  '古诗':{bg:'#B8893F',text:'#fff'},
+  '神话故事':{bg:'#C8553D',text:'#fff'},
+  '文言文':{bg:'#5B3A8E',text:'#fff'},
+  '说明文':{bg:'#3B7EA1',text:'#fff'},
+  '记叙文':{bg:'#7BAE8E',text:'#1F4A3C'},
+  '童话':{bg:'#E89B4F',text:'#fff'},
+  '习作':{bg:'#A8884F',text:'#fff'},
+  '周测':{bg:'#2D5F4E',text:'#fff'},
+  '月测':{bg:'#8B2E1F',text:'#fff'},
+};
+
+const BOOK_GROUPS = [
+  { group:'一、快乐读书吧', desc:'四上必读·神话主题', books:[
+    { id:'b1', title:'《山海经》', author:'徐客 编著', color:'#C8553D', total:380, unit:'页', cat:'神话故事' },
+    { id:'b2', title:'《中国古代神话》', author:'袁珂 编著', color:'#B8893F', total:420, unit:'页', cat:'神话故事' },
+    { id:'b3', title:'《希腊神话故事》', author:'[德]施瓦布 著', color:'#5B3A8E', total:360, unit:'页', cat:'神话故事' },
+  ]},
+  { group:'二、课内作家', desc:'紧扣课文·拓展阅读', books:[
+    { id:'b4', title:'《山海经》', author:'徐客 编著', color:'#C8553D', total:380, unit:'页', cat:'神话故事' },
+    { id:'b5', title:'《任大霖散文选》', author:'任大霖 著', color:'#7BAE8E', total:300, unit:'页', cat:'散文类' },
+    { id:'b6', title:'《一只窝囊的大老虎》', author:'叶至善 著', color:'#3B7EA1', total:220, unit:'页', cat:'散文·科普' },
+    { id:'b7', title:'《牛的写意》', author:'李汉荣 著', color:'#7BAE8E', total:260, unit:'页', cat:'散文类' },
+    { id:'b8', title:'《猎人笔记》', author:'[俄]屠格涅夫 著', color:'#8B2E1F', total:400, unit:'页', cat:'小说类' },
+    { id:'b9', title:'《中国传统节日故事图画书》', author:'高洪波等 著', color:'#D4A574', total:200, unit:'页', cat:'绘本类' },
+  ]},
+  { group:'三、课外阅读', desc:'拓展视野·兴趣阅读', books:[
+    { id:'b10', title:'《我要做好孩子》', author:'黄蓓佳 著', color:'#7BAE8E', total:320, unit:'页', cat:'儿童小说' },
+    { id:'b11', title:'《狼王梦》', author:'沈石溪 著', color:'#8B2E1F', total:380, unit:'页', cat:'动物小说' },
+    { id:'b12', title:'《时代广场的蟋蟀》', author:'[美]乔治·塞尔登 著', color:'#D4A574', total:180, unit:'页', cat:'童话' },
+    { id:'b13', title:'《亲爱的汉修先生》', author:'[美]贝芙莉·克莱瑞 著', color:'#3B7EA1', total:200, unit:'页', cat:'儿童小说' },
+    { id:'b14', title:'《一千零一夜》', author:'民间故事集', color:'#5B3A8E', total:500, unit:'页', cat:'神话故事' },
+    { id:'b15', title:'《追踪小绿人》三部曲', author:'金波 著', color:'#7BAE8E', total:360, unit:'页', cat:'童话' },
+  ]},
+];
+
+// 扁平化所有书目，方便查找和成就统计
+const BOOKS = BOOK_GROUPS.flatMap(g=>g.books);
+
+// 书目分类配色
+const CAT_COLORS = {
+  '神话故事':{bg:'#C8553D',text:'#fff'},
+  '散文类':{bg:'#7BAE8E',text:'#1F4A3C'},
+  '散文·科普':{bg:'#3B7EA1',text:'#fff'},
+  '小说类':{bg:'#8B2E1F',text:'#fff'},
+  '绘本类':{bg:'#D4A574',text:'#7A5A2A'},
+  '儿童小说':{bg:'#3B7EA1',text:'#fff'},
+  '动物小说':{bg:'#8B2E1F',text:'#fff'},
+  '童话':{bg:'#D4A574',text:'#7A5A2A'},
+};
+
+const ACHIEVEMENTS = [
+  { id:'a1', name:'初次打卡', desc:'完成第一次阅读打卡', icon:'🌱' },
+  { id:'a2', name:'坚持三天', desc:'连续打卡 3 天', icon:'🔥' },
+  { id:'a3', name:'一周不辍', desc:'连续打卡 7 天', icon:'⭐' },
+  { id:'a4', name:'半月有恒', desc:'累计打卡 15 天', icon:'🌙' },
+  { id:'a5', name:'满月之功', desc:'累计打卡 30 天', icon:'🏆' },
+  { id:'a6', name:'读破万卷', desc:'累计阅读 200 分钟', icon:'📚' },
+  { id:'a7', name:'笔耕不辍', desc:'累计写下 20 条读后感', icon:'✍️' },
+  { id:'a8', name:'书海泛舟', desc:'读完 1 本推荐书', icon:'🚣' },
+  { id:'a9', name:'三本达成', desc:'读完 3 本推荐书（快乐读书吧）', icon:'🌟' },
+  { id:'a10', name:'五本有成', desc:'读完 5 本推荐书', icon:'📖' },
+  { id:'a11', name:'十本博览', desc:'读完 10 本推荐书', icon:'🎖️' },
+  { id:'a12', name:'全部通读', desc:'读完 15 本推荐书', icon:'👑' },
+  { id:'a13', name:'满勤暑假', desc:'完成 56 天全部打卡', icon:'🎊' },
+  { id:'a14', name:'文人雅士', desc:'完成全部 8 周文言短句', icon:'📜' },
+  { id:'a15', name:'快乐读书', desc:'读完快乐读书吧全部 3 本', icon:'🎁' },
+];
+
+const STORAGE_KEY = 'reading_checkin_v2';
+function loadState(){
+  try{ const s = localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); }catch(e){}
+  return { checkins:{}, notes:[], bookProgress:{b1:0,b2:0,b3:0,b4:0,b5:0,b6:0,b7:0,b8:0,b9:0,b10:0,b11:0,b12:0,b13:0,b14:0,b15:0}, startDate:null, totalSeconds:0, unlockedAch:[], parentPwd:'1234' };
+}
+function saveState(s){ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(d){
+  const dt = new Date(d);
+  return `${dt.getMonth()+1}月${dt.getDate()}日`;
+}
+function fmtDuration(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+const AppCtx = React.createContext(null);
+function useApp(){ return React.useContext(AppCtx); }
+
+function useStore(){
+  const [state,setState] = useState(()=>loadState());
+  const [tab,setTab] = useState('today');
+  const [currentDay,setCurrentDay] = useState(()=>{
+    const s = loadState();
+    if(!s.startDate) return 1;
+    const start = new Date(s.startDate);
+    const now = new Date(todayStr());
+    const diff = Math.floor((now-start)/(1000*60*60*24))+1;
+    return Math.max(1, Math.min(56, diff));
+  });
+
+  const update = useCallback((fn)=>{
+    setState(prev=>{ const next = typeof fn==='function' ? fn(prev) : fn; saveState(next); return next; });
+  },[]);
+
+  const checkIn = useCallback((dayIdx, durationSec, reflection)=>{
+    update(prev=>{
+      const date = todayStr();
+      const checkins = {...prev.checkins};
+      const notes = [...prev.notes];
+      if(reflection && reflection.trim()){
+        notes.unshift({ id:Date.now(), day:dayIdx, date, text:reflection.trim(), text_title:SUMMER_PLAN[dayIdx-1]?.text });
+      }
+      checkins[date] = {
+        day: dayIdx, duration: durationSec,
+        title: SUMMER_PLAN[dayIdx-1]?.text, unit: SUMMER_PLAN[dayIdx-1]?.unit,
+        genre: SUMMER_PLAN[dayIdx-1]?.genre, completedAt: new Date().toISOString(),
+      };
+      const totalSeconds = prev.totalSeconds + durationSec;
+      const startDate = prev.startDate || date;
+      const unlockedAch = [...prev.unlockedAch];
+      const totalDays = Object.keys(checkins).length;
+      const noteCount = notes.length;
+      const streak = calcStreak(checkins);
+      const tryUnlock = (id,cond)=>{ if(cond && !unlockedAch.includes(id)) unlockedAch.push(id); };
+      tryUnlock('a1', totalDays>=1);
+      tryUnlock('a2', streak>=3);
+      tryUnlock('a3', streak>=7);
+      tryUnlock('a4', totalDays>=15);
+      tryUnlock('a5', totalDays>=30);
+      tryUnlock('a6', totalSeconds>=200*60);
+      tryUnlock('a7', noteCount>=20);
+      const bookDone = Object.entries(prev.bookProgress).filter(([k,v])=>v>=BOOKS.find(b=>b.id===k).total).length;
+      const happyDone = ['b1','b2','b3'].every(id=>prev.bookProgress[id]>=BOOKS.find(b=>b.id===id).total);
+      tryUnlock('a8', bookDone>=1);
+      tryUnlock('a9', bookDone>=3);
+      tryUnlock('a10', bookDone>=5);
+      tryUnlock('a11', bookDone>=10);
+      tryUnlock('a12', bookDone>=15);
+      tryUnlock('a13', totalDays>=56);
+      tryUnlock('a14', totalDays>=56);
+      tryUnlock('a15', happyDone);
+      return { ...prev, checkins, notes, totalSeconds, startDate, unlockedAch };
+    });
+  },[update]);
+
+  const addNote = useCallback((note)=>{
+    update(prev=>({ ...prev, notes:[{id:Date.now(), date:todayStr(), ...note}, ...prev.notes] }));
+  },[update]);
+
+  const deleteNote = useCallback((id)=>{
+    update(prev=>({...prev, notes:prev.notes.filter(n=>n.id!==id)}));
+  },[update]);
+
+  const updateBookProgress = useCallback((bookId, val)=>{
+    update(prev=>{
+      const bookProgress = {...prev.bookProgress, [bookId]:Math.max(0,val)};
+      const unlockedAch = [...prev.unlockedAch];
+      const done = Object.entries(bookProgress).filter(([k,v])=>v>=BOOKS.find(b=>b.id===k).total).length;
+      const happyDone = ['b1','b2','b3'].every(id=>bookProgress[id]>=BOOKS.find(b=>b.id===id).total);
+      const tryUnlock = (id,cond)=>{ if(cond && !unlockedAch.includes(id)) unlockedAch.push(id); };
+      tryUnlock('a8', done>=1);
+      tryUnlock('a9', done>=3);
+      tryUnlock('a10', done>=5);
+      tryUnlock('a11', done>=10);
+      tryUnlock('a12', done>=15);
+      tryUnlock('a15', happyDone);
+      return {...prev, bookProgress, unlockedAch};
+    });
+  },[update]);
+
+  const setStartDate = useCallback((date)=>{ update(prev=>({...prev, startDate:date})); },[update]);
+
+  const resetAll = useCallback(()=>{
+    if(confirm('确定要清空所有打卡记录吗？此操作不可恢复。')){
+      const fresh = { checkins:{}, notes:[], bookProgress:{b1:0,b2:0,b3:0,b4:0,b5:0,b6:0,b7:0,b8:0,b9:0,b10:0,b11:0,b12:0,b13:0,b14:0,b15:0}, startDate:null, totalSeconds:0, unlockedAch:[], parentPwd:'1234' };
+      saveState(fresh); setState(fresh); setCurrentDay(1);
+    }
+  },[]);
+
+  const setParentPwd = useCallback((pwd)=>{
+    update(prev=>({...prev, parentPwd:pwd}));
+  },[update]);
+
+  const stats = useMemo(()=>{
+    const checkinList = Object.entries(state.checkins).map(([date,v])=>({date,...v})).sort((a,b)=>b.date.localeCompare(a.date));
+    const totalDays = checkinList.length;
+    const totalMinutes = Math.round(state.totalSeconds/60);
+    const streak = calcStreak(state.checkins);
+    const progressPct = Math.round(totalDays/56*100);
+    return { checkinList, totalDays, totalMinutes, streak, progressPct };
+  },[state]);
+
+  return { state, tab, setTab, currentDay, setCurrentDay, checkIn, addNote, deleteNote, updateBookProgress, setStartDate, resetAll, setParentPwd, stats };
+}
+
+function calcStreak(checkins){
+  if(Object.keys(checkins).length===0) return 0;
+  let streak = 0;
+  let d = new Date();
+  const today = todayStr();
+  if(!checkins[today]) d.setDate(d.getDate()-1);
+  while(true){
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if(checkins[ds]) streak++; else break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function AppShell(){
+  const store = useApp();
+  return (
+    <div className="app">
+      <Header />
+      <main className="mt-4">
+        {store.tab==='today' && <TodayPage />}
+        {store.tab==='calendar' && <CalendarPage />}
+        {store.tab==='books' && <BooksPage />}
+        {store.tab==='notes' && <NotesPage />}
+        {store.tab==='stats' && <StatsPage />}
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
+
+function Header(){
+  const { stats } = useApp();
+  return (
+    <header className="row between fade-in">
+      <div className="row gap-3">
+        <div style={{width:48,height:48,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,background:'linear-gradient(135deg,#2D5F4E,#1F4A3C)',boxShadow:'0 4px 12px -4px rgba(45,95,78,0.5)'}}>📖</div>
+        <div>
+          <h1 className="font-brush text-2xl leading-tight text-ink">阅读打卡</h1>
+          <p className="text-xs text-soft">三升四·语文暑假衔接</p>
+        </div>
+      </div>
+      <div className="row gap-2">
+        <div className="chip" style={{background:'rgba(200,85,61,0.12)',color:'var(--vermilion)'}}>
+          <span className="streak-flame">🔥</span> {stats.streak} 天
+        </div>
+        <div className="chip" style={{background:'rgba(45,95,78,0.12)',color:'var(--ink)'}}>
+          📚 {stats.totalDays}/56
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function TodayPage(){
+  const { currentDay, setCurrentDay, state, checkIn, stats } = useApp();
+  const plan = SUMMER_PLAN[currentDay-1];
+  const today = todayStr();
+  const todayCheckin = state.checkins[today];
+  const [reflection,setReflection] = useState('');
+  const [timerRunning,setTimerRunning] = useState(false);
+  const [seconds,setSeconds] = useState(0);
+  const timerRef = useRef(null);
+  const [done,setDone] = useState(false);
+
+  useEffect(()=>{
+    if(timerRunning){ timerRef.current = setInterval(()=>setSeconds(s=>s+1),1000); }
+    else if(timerRef.current){ clearInterval(timerRef.current); }
+    return ()=>{ if(timerRef.current) clearInterval(timerRef.current); };
+  },[timerRunning]);
+
+  const targetSeconds = plan.minutes*60;
+  const progressPct = Math.min(100, Math.round(seconds/targetSeconds*100));
+
+  const handleCheckIn = ()=>{
+    checkIn(currentDay, seconds || plan.minutes*60, reflection);
+    setTimerRunning(false); setDone(true);
+  };
+
+  if(todayCheckin && !done){
+    return (
+      <div className="fade-in">
+        <div className="card card-warm text-center pop-in">
+          <div className="ink-stamp" style={{width:80,height:80,fontSize:22,margin:'0 auto 12px'}}>已打卡</div>
+          <h2 className="font-brush text-2xl text-ink">今日已阅读</h2>
+          <p className="mt-2 text-sm text-soft">{fmtDate(today)} · 第 {todayCheckin.day} 天 · {todayCheckin.title}</p>
+          <div className="mt-3 text-3xl font-bold timer-num text-ink">{fmtDuration(todayCheckin.duration)}</div>
+          <button className="btn btn-ghost btn-sm mt-4" onClick={()=>setDone(false)}>查看今日内容</button>
+        </div>
+        <ClassicalCard day={currentDay} />
+        <DayNavigator />
+      </div>
+    );
+  }
+
+  if(done){
+    return (
+      <div className="fade-in">
+        <div className="card card-warm text-center pop-in">
+          <div style={{fontSize:56,marginBottom:12}}>🎉</div>
+          <h2 className="font-brush text-2xl text-ink">打卡成功</h2>
+          <p className="mt-2 text-sm text-soft">已坚持 {stats.streak} 天，累计阅读 {stats.totalMinutes} 分钟</p>
+          <button className="btn btn-primary mt-5" onClick={()=>setDone(false)}>返回今日</button>
+        </div>
+        <DayNavigator />
+      </div>
+    );
+  }
+
+  const gc = GENRE_COLORS[plan.genre] || {bg:'#7BAE8E',text:'#fff'};
+
+  return (
+    <div className="fade-in">
+      {/* 日期与任务卡片 */}
+      <div className="card">
+        <div className="row between mb-3">
+          <div>
+            <div className="text-xs font-semi text-soft">第 {plan.week} 周 · 第 {plan.day} 天 · {fmtDate(today)}</div>
+            <h2 className="font-brush text-2xl mt-1 text-ink">{plan.text}</h2>
+          </div>
+          <div className="chip" style={{background:gc.bg+'22',color:gc.text}}>{plan.genre}</div>
+        </div>
+        <div style={{borderRadius:12,padding:12,marginBottom:12,background:'rgba(45,95,78,0.06)'}}>
+          <div className="text-xs font-semi mb-1 text-soft">📋 今日预习重点</div>
+          <div className="text-sm font-semi text-ink">{plan.focus}</div>
+        </div>
+        <div style={{marginBottom:12}}>
+          <div className="text-xs font-semi mb-1" style={{color:'#7A5A2A'}}>📖 文段内容</div>
+          <div className="font-kai text-sm mt-2" style={{padding:12,borderRadius:12,background:'rgba(212,165,116,0.1)',lineHeight:1.9,whiteSpace:'pre-wrap'}}>
+            {plan.textContent}
+          </div>
+        </div>
+        <div style={{borderRadius:12,padding:12,background:'rgba(212,165,116,0.12)'}}>
+          <div className="text-xs font-semi mb-1" style={{color:'#7A5A2A'}}>✏️ 预习要求</div>
+          <div className="text-sm">{plan.task}</div>
+        </div>
+        <div className="mt-3 row gap-2 text-xs text-soft">
+          <span>📖</span><span>{plan.book} · {plan.pages}</span>
+          <span style={{marginLeft:'auto'}}>⏱️ 建议 {plan.minutes} 分钟</span>
+        </div>
+      </div>
+
+      {/* 计时器 */}
+      <div className="card text-center">
+        <div className="text-xs font-semi mb-3 text-soft">⏱️ 阅读计时</div>
+        <div className="ring-progress" style={{'--p':progressPct}}>
+          <div>
+            <div className="text-3xl font-bold timer-num text-ink">{fmtDuration(seconds)}</div>
+            <div className="text-xs text-soft">目标 {plan.minutes}:00</div>
+          </div>
+        </div>
+        <div className="mt-4 row center gap-2">
+          {!timerRunning ? (
+            <button className="btn btn-primary btn-sm" onClick={()=>setTimerRunning(true)}>▶ 开始</button>
+          ) : (
+            <button className="btn btn-vermilion btn-sm" onClick={()=>setTimerRunning(false)}>⏸ 暂停</button>
+          )}
+          <button className="btn btn-ghost btn-sm" onClick={()=>{setTimerRunning(false);setSeconds(0);}}>↺ 重置</button>
+        </div>
+      </div>
+
+      {/* 读后感 */}
+      <div className="card">
+        <div className="text-sm font-semi mb-2 text-ink">✍️ 读后感受（写2句，锻炼书面表达）</div>
+        <textarea rows="3" placeholder="例：我感受到了潮水的壮观，仿佛身临其境……" value={reflection} onChange={e=>setReflection(e.target.value)} />
+        <div className="text-xs mt-1 text-right text-soft">{reflection.length} 字</div>
+      </div>
+
+      {/* 打卡按钮 */}
+      <button className="btn btn-vermilion btn-block" style={{marginBottom:16,fontSize:16,padding:'16px'}} onClick={handleCheckIn}>
+        ✓ 完成今日打卡（第 {currentDay} 天）
+      </button>
+
+      <ClassicalCard day={currentDay} />
+      <DayNavigator />
+    </div>
+  );
+}
+
+function DayNavigator(){
+  const { currentDay, setCurrentDay } = useApp();
+  return (
+    <div className="row gap-2">
+      <button className="btn btn-ghost btn-sm flex-1" disabled={currentDay<=1} onClick={()=>setCurrentDay(d=>Math.max(1,d-1))}>← 前一天</button>
+      <span className="text-xs font-semi text-soft" style={{padding:'0 8px'}}>{currentDay}/56</span>
+      <button className="btn btn-ghost btn-sm flex-1" disabled={currentDay>=56} onClick={()=>setCurrentDay(d=>Math.min(56,d+1))}>后一天 →</button>
+    </div>
+  );
+}
+
+function ClassicalCard({day}){
+  const plan = SUMMER_PLAN[day-1];
+  if(!plan) return null;
+  return (
+    <div className="card">
+      <div className="seal-divider mb-3">📜 习作美文好段</div>
+      <div className="text-xs font-semi mb-1" style={{color:'#5B3A8E'}}>{plan.classical}</div>
+      <div className="font-kai text-lg mt-2" style={{padding:12,borderRadius:12,background:'rgba(91,58,142,0.06)',lineHeight:1.8}}>
+        {plan.clText}
+      </div>
+      <div className="mt-2 text-sm text-soft">
+        <span className="font-semi text-ink">赏析：</span>{plan.clTr}
+      </div>
+    </div>
+  );
+}
+
+function CalendarPage(){
+  const { state, stats } = useApp();
+  const [viewMonth,setViewMonth] = useState(new Date().getMonth());
+  const [viewYear,setViewYear] = useState(new Date().getFullYear());
+
+  const days = useMemo(()=>{
+    const arr = [];
+    const first = new Date(viewYear, viewMonth, 1);
+    const last = new Date(viewYear, viewMonth+1, 0);
+    const startWeekday = (first.getDay()+6)%7;
+    for(let i=0;i<startWeekday;i++) arr.push(null);
+    for(let d=1; d<=last.getDate(); d++){
+      const ds = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      arr.push({ day:d, dateStr:ds, checkin:state.checkins[ds] });
+    }
+    return arr;
+  },[viewYear,viewMonth,state.checkins]);
+
+  const monthLabel = `${viewYear}年${viewMonth+1}月`;
+  const today = todayStr();
+  const prevMonth = ()=>{ if(viewMonth===0){setViewMonth(11);setViewYear(y=>y-1)} else setViewMonth(m=>m-1); };
+  const nextMonth = ()=>{ if(viewMonth===11){setViewMonth(0);setViewYear(y=>y+1)} else setViewMonth(m=>m+1); };
+
+  return (
+    <div className="fade-in">
+      <div className="card">
+        <div className="row between mb-4">
+          <button className="btn btn-ghost btn-sm" onClick={prevMonth}>‹</button>
+          <h2 className="font-brush text-xl text-ink">{monthLabel}</h2>
+          <button className="btn btn-ghost btn-sm" onClick={nextMonth}>›</button>
+        </div>
+        <div className="grid-7 mb-2">
+          {['一','二','三','四','五','六','日'].map(w=>(
+            <div key={w} className="text-center text-xs font-semi text-soft" style={{padding:'4px 0'}}>{w}</div>
+          ))}
+        </div>
+        <div className="grid-7">
+          {days.map((d,i)=>{
+            if(!d) return <div key={i}></div>;
+            const min = d.checkin?.duration ? Math.round(d.checkin.duration/60) : 0;
+            let level = '';
+            if(d.checkin) level = min>=20?'heat-4':min>=12?'heat-3':min>=7?'heat-2':'heat-1';
+            const isToday = d.dateStr===today;
+            return (
+              <div key={i} className={`heat-cell ${level} ${isToday?'heat-today':''}`}>
+                {d.day}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 row center gap-3 text-xs text-soft" style={{justifyContent:'center'}}>
+          <span>少</span>
+          <div className="heat-cell" style={{width:14,height:14,aspectRatio:'unset'}}></div>
+          <div className="heat-cell heat-1" style={{width:14,height:14,aspectRatio:'unset'}}></div>
+          <div className="heat-cell heat-2" style={{width:14,height:14,aspectRatio:'unset'}}></div>
+          <div className="heat-cell heat-3" style={{width:14,height:14,aspectRatio:'unset'}}></div>
+          <div className="heat-cell heat-4" style={{width:14,height:14,aspectRatio:'unset'}}></div>
+          <span>多</span>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div className="card text-center card-tight">
+          <div className="text-3xl font-bold text-ink">{stats.totalDays}</div>
+          <div className="text-xs mt-1 text-soft">累计打卡</div>
+        </div>
+        <div className="card text-center card-tight">
+          <div className="text-3xl font-bold text-vermilion">{stats.streak}</div>
+          <div className="text-xs mt-1 text-soft">连续天数</div>
+        </div>
+        <div className="card text-center card-tight">
+          <div className="text-3xl font-bold text-gold">{stats.totalMinutes}</div>
+          <div className="text-xs mt-1 text-soft">阅读分钟</div>
+        </div>
+        <div className="card text-center card-tight">
+          <div className="text-3xl font-bold text-jade">{stats.progressPct}%</div>
+          <div className="text-xs mt-1 text-soft">暑假进度</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="seal-divider mb-3">📅 最近打卡</div>
+        {stats.checkinList.length===0 ? (
+          <div className="text-center text-sm text-soft" style={{padding:'24px 0'}}>还没有打卡记录，开始第一次阅读吧～</div>
+        ) : (
+          <div className="max-h-64 scrollbar-thin">
+            {stats.checkinList.slice(0,10).map((c,i)=>(
+              <div key={i} className="row gap-3" style={{padding:8,borderRadius:12,marginBottom:8,background:'rgba(45,95,78,0.04)'}}>
+                <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,flexShrink:0,background:GENRE_COLORS[c.genre]?.bg||'#7BAE8E',color:'#fff'}}>{c.day}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semi truncate text-ink">{c.title}</div>
+                  <div className="text-xs text-soft">{fmtDate(c.date)} · {Math.round(c.duration/60)}分钟</div>
+                </div>
+                <div className="text-lg text-vermilion">✓</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BooksPage(){
+  const { state, updateBookProgress } = useApp();
+  const [editing,setEditing] = useState(null);
+  const [val,setVal] = useState('');
+
+  const startEdit = (book)=>{ setEditing(book.id); setVal(state.bookProgress[book.id]||0); };
+  const saveEdit = ()=>{ if(editing) updateBookProgress(editing, Number(val)); setEditing(null); };
+
+  // 整体阅读统计
+  const doneCount = BOOKS.filter(b=>(state.bookProgress[b.id]||0)>=b.total).length;
+  const readingCount = BOOKS.filter(b=>{ const v=state.bookProgress[b.id]||0; return v>0 && v<b.total; }).length;
+  const totalPct = Math.round(doneCount/BOOKS.length*100);
+
+  return (
+    <div className="fade-in">
+      {/* 整体概览 */}
+      <div className="card card-warm">
+        <div className="seal-divider mb-2">📚 我的书架</div>
+        <div className="row gap-3 mt-3" style={{justifyContent:'space-around'}}>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-ink">{BOOKS.length}</div>
+            <div className="text-xs text-soft mt-1">总书目</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-jade">{doneCount}</div>
+            <div className="text-xs text-soft mt-1">已读完</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gold">{readingCount}</div>
+            <div className="text-xs text-soft mt-1">阅读中</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-vermilion">{totalPct}%</div>
+            <div className="text-xs text-soft mt-1">完成率</div>
+          </div>
+        </div>
+        <div className="mt-3">
+          <div className="progress-bar"><div style={{width:totalPct+'%'}}></div></div>
+        </div>
+      </div>
+
+      {/* 分组展示 */}
+      {BOOK_GROUPS.map((g,gi)=>{
+        const groupDone = g.books.filter(b=>(state.bookProgress[b.id]||0)>=b.total).length;
+        return (
+          <div key={gi} className="card">
+            <div className="row between mb-3">
+              <div>
+                <div className="font-brush text-lg text-ink">{g.group}</div>
+                <div className="text-xs text-soft mt-1">{g.desc}</div>
+              </div>
+              <div className="chip" style={{background:'rgba(45,95,78,0.12)',color:'var(--ink)'}}>
+                {groupDone}/{g.books.length}
+              </div>
+            </div>
+
+            {g.books.map(book=>{
+              const cur = state.bookProgress[book.id]||0;
+              const pct = Math.min(100, Math.round(cur/book.total*100));
+              const done = cur>=book.total;
+              const cc = CAT_COLORS[book.cat]||{bg:'#7BAE8E',text:'#fff'};
+              return (
+                <div key={book.id} style={{padding:'10px 0',borderTop: book.id!==g.books[0].id?'1px dashed var(--mist)':'none'}}>
+                  <div className="row gap-2">
+                    <div className="book-spine" style={{background:book.color}}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="row between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-serif-cn font-semi text-base text-ink truncate">{book.title}</h3>
+                          <div className="text-xs mt-1 text-soft">{book.author}</div>
+                        </div>
+                        {done ? (
+                          <div className="chip" style={{background:'rgba(212,165,116,0.2)',color:'#7A5A2A'}}>✓ 读完</div>
+                        ) : (
+                          <div className="chip" style={{background:cc.bg+'22',color:cc.text}}>{book.cat}</div>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <div className="row between text-xs mb-1">
+                          <span className="text-soft">{cur} / {book.total} {book.unit}</span>
+                          <span className="font-semi text-ink">{pct}%</span>
+                        </div>
+                        <div className="progress-bar"><div style={{width:pct+'%'}}></div></div>
+                      </div>
+                      {editing===book.id ? (
+                        <div className="mt-2 row gap-2">
+                          <input type="number" value={val} onChange={e=>setVal(e.target.value)} style={{padding:'8px 12px',fontSize:14}} />
+                          <button className="btn btn-primary btn-sm" onClick={saveEdit}>保存</button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>setEditing(null)}>取消</button>
+                        </div>
+                      ) : (
+                        <button className="btn btn-ghost btn-sm mt-2" style={{fontSize:12,padding:'6px 12px',minHeight:36}} onClick={()=>startEdit(book)}>更新进度</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+
+      <div className="text-center text-xs text-soft" style={{padding:'8px 0'}}>
+        💡 点击"更新进度"记录阅读页数，读完自动解锁成就
+      </div>
+    </div>
+  );
+}
+
+function NotesPage(){
+  const { state, addNote, deleteNote } = useApp();
+  const [showForm,setShowForm] = useState(false);
+  const [type,setType] = useState('优美句子');
+  const [content,setContent] = useState('');
+  const [source,setSource] = useState('');
+  const types = ['优美句子','读后感悟','美文摘抄','生字积累','好词好段'];
+
+  const submit = ()=>{
+    if(!content.trim()) return;
+    addNote({ type, text:content.trim(), source:source.trim()||'课外' });
+    setContent(''); setSource(''); setShowForm(false);
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="card">
+        <div className="row between">
+          <div>
+            <div className="seal-divider mb-1">📝 阅读素材本</div>
+            <p className="text-xs text-soft mt-2">积累优美句子、读后感悟、美文摘抄</p>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={()=>setShowForm(v=>!v)}>{showForm?'取消':'＋ 新增'}</button>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="card pop-in">
+          <div className="seg mb-3">
+            {types.map(t=>(<button key={t} className={type===t?'on':''} onClick={()=>setType(t)}>{t}</button>))}
+          </div>
+          <textarea rows="3" placeholder="写下你想积累的内容…" value={content} onChange={e=>setContent(e.target.value)} />
+          <input type="text" className="mt-2" placeholder="来源（如：《观潮》/ 课外）" value={source} onChange={e=>setSource(e.target.value)} />
+          <button className="btn btn-primary btn-block mt-3" onClick={submit}>保存</button>
+        </div>
+      )}
+
+      {state.notes.length===0 ? (
+        <div className="card text-center" style={{padding:32}}>
+          <div style={{fontSize:40,marginBottom:8}}>📒</div>
+          <div className="text-sm text-soft">还没有笔记，点击"新增"开始积累吧</div>
+        </div>
+      ) : (
+        state.notes.map(note=>(
+          <div className="card fade-in" key={note.id}>
+            <div className="row between mb-2">
+              <div className="chip" style={{background:'rgba(45,95,78,0.1)',color:'var(--ink)'}}>{note.type}</div>
+              <div className="row gap-2">
+                <span className="text-xs text-soft">{fmtDate(note.date)} · {note.source}</span>
+                <button className="text-xs" style={{color:'var(--vermilion)',padding:'4px 8px',borderRadius:8,background:'rgba(200,85,61,0.08)',border:'none',cursor:'pointer',fontFamily:'inherit'}} onClick={()=>deleteNote(note.id)}>删除</button>
+              </div>
+            </div>
+            <div className="font-serif-cn text-base" style={{lineHeight:1.7}}>{note.text}</div>
+            {note.text_title && <div className="text-xs mt-2 text-soft">— 《{note.text_title}》</div>}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function StatsPage(){
+  const { state, stats, setStartDate, resetAll, setParentPwd } = useApp();
+  const [pwd,setPwd] = useState('');
+  const [authed,setAuthed] = useState(false);
+  const [newPwd,setNewPwd] = useState('');
+  const [newPwd2,setNewPwd2] = useState('');
+
+  const weeklyStats = useMemo(()=>{
+    const w = Array(8).fill(0).map((_,i)=>({week:i+1, days:0}));
+    Object.values(state.checkins).forEach(c=>{
+      if(c.day){ const plan = SUMMER_PLAN[c.day-1]; if(plan) w[plan.week-1].days++; }
+    });
+    return w;
+  },[state.checkins]);
+
+  const genreStats = useMemo(()=>{
+    const g = {};
+    Object.values(state.checkins).forEach(c=>{ if(!c.genre) return; g[c.genre] = (g[c.genre]||0)+1; });
+    return Object.entries(g).sort((a,b)=>b[1]-a[1]);
+  },[state.checkins]);
+
+  const maxWeekDays = Math.max(...weeklyStats.map(w=>w.days),1);
+
+  const handleAuth = ()=>{
+    if(pwd===(state.parentPwd||'1234')){ setAuthed(true); setPwd(''); }
+    else alert('密码错误，默认密码 1234');
+  };
+  const handleChangePwd = ()=>{
+    if(!newPwd || newPwd.length<4){ alert('新密码至少 4 位'); return; }
+    if(newPwd!==newPwd2){ alert('两次输入不一致'); return; }
+    setParentPwd(newPwd);
+    setNewPwd(''); setNewPwd2('');
+    alert('家长密码已修改');
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="card card-warm text-center">
+        <div className="text-xs font-semi mb-2 text-soft">暑假阅读总览</div>
+        <div className="grid-3">
+          <div>
+            <div className="text-3xl font-bold text-ink">{stats.totalDays}</div>
+            <div className="text-xs mt-1 text-soft">打卡天数</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-vermilion">{stats.totalMinutes}</div>
+            <div className="text-xs mt-1 text-soft">阅读分钟</div>
+          </div>
+          <div>
+            <div className="text-3xl font-bold text-gold">{stats.streak}</div>
+            <div className="text-xs mt-1 text-soft">连续天数</div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="row between text-xs mb-1">
+            <span className="text-soft">暑假进度</span>
+            <span className="font-bold text-ink">{stats.totalDays}/56 天 · {stats.progressPct}%</span>
+          </div>
+          <div className="progress-bar"><div style={{width:stats.progressPct+'%'}}></div></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="seal-divider mb-4">📊 每周打卡统计</div>
+        <div className="bar-wrap">
+          {weeklyStats.map(w=>(
+            <div className="bar-col" key={w.week}>
+              <div className="text-xs font-bold text-ink">{w.days}</div>
+              <div className="bar-track">
+                <div className="bar-fill" style={{
+                  height:(w.days/maxWeekDays*100)+'%',
+                  background:w.days>=7?'linear-gradient(180deg,#D4A574,#C8553D)':'linear-gradient(180deg,#7BAE8E,#2D5F4E)'
+                }}></div>
+              </div>
+              <div className="text-xs text-soft">W{w.week}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {genreStats.length>0 && (
+        <div className="card">
+          <div className="seal-divider mb-3">🎨 阅读文体分布</div>
+          <div className="col gap-2">
+            {genreStats.map(([genre,count])=>{
+              const max = genreStats[0][1];
+              const pct = Math.round(count/max*100);
+              return (
+                <div className="row gap-2" key={genre}>
+                  <div className="text-xs font-semi" style={{width:72}}>{genre}</div>
+                  <div style={{flex:1,height:20,borderRadius:8,overflow:'hidden',background:'rgba(45,95,78,0.06)'}}>
+                    <div style={{height:'100%',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:8,width:Math.max(pct,15)+'%',background:GENRE_COLORS[genre]?.bg||'#7BAE8E',color:'#fff',fontSize:12,fontWeight:700}}>{count}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="seal-divider mb-4">🏆 成就墙（{state.unlockedAch.length}/{ACHIEVEMENTS.length}）</div>
+        <div className="grid-ach">
+          {ACHIEVEMENTS.map(a=>{
+            const unlocked = state.unlockedAch.includes(a.id);
+            return (
+              <div className="text-center" key={a.id}>
+                <div className={`badge-medal ${unlocked?'':'badge-locked'}`}>{a.icon}</div>
+                <div className="text-xs font-semi mt-1" style={{color:unlocked?'var(--ink)':'var(--text-soft)'}}>{a.name}</div>
+                <div className="text-xs" style={{fontSize:10,lineHeight:1.3,marginTop:2,color:'var(--text-soft)'}}>{a.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="seal-divider mb-3">⚙️ 家长区</div>
+        {!authed ? (
+          <div className="row gap-2">
+            <input type="password" placeholder="家长密码（默认1234）" value={pwd} onChange={e=>setPwd(e.target.value)} />
+            <button className="btn btn-primary btn-sm" style={{whiteSpace:'nowrap'}} onClick={handleAuth}>进入</button>
+          </div>
+        ) : (
+          <div className="col gap-3 fade-in">
+            <div>
+              <label className="text-xs font-semi text-soft">暑假开始日期</label>
+              <input type="date" value={state.startDate||todayStr()} onChange={e=>setStartDate(e.target.value)} />
+            </div>
+            <div style={{borderRadius:12,padding:12,fontSize:12,background:'rgba(200,85,61,0.06)',color:'var(--text-soft)'}}>
+              💡 开始日期用于计算"当前应到第几天"。修改后今日学习页会跳到对应天数。
+            </div>
+
+            <div className="seal-divider" style={{fontSize:13}}>🔒 修改家长密码</div>
+            <input type="password" placeholder="新密码（至少4位）" value={newPwd} onChange={e=>setNewPwd(e.target.value)} />
+            <input type="password" placeholder="再次输入新密码" value={newPwd2} onChange={e=>setNewPwd2(e.target.value)} />
+            <button className="btn btn-primary btn-block btn-sm" onClick={handleChangePwd}>保存新密码</button>
+
+            <button className="btn btn-vermilion btn-block btn-sm" onClick={resetAll}>🗑 清空所有打卡记录</button>
+            <button className="btn btn-ghost btn-block btn-sm" onClick={()=>setAuthed(false)}>退出家长区</button>
+          </div>
+        )}
+      </div>
+
+      <div className="text-center text-xs text-soft" style={{padding:'8px 0',lineHeight:1.7}}>
+        阅读打卡 · 三升四语文暑假衔接 · v1.0<br/>
+        数据仅保存在本机浏览器，不上传任何服务器
+      </div>
+
+      <AboutSection />
+    </div>
+  );
+}
+
+function AboutSection(){
+  const [open,setOpen] = useState(false);
+  return (
+    <div className="card">
+      <button className="row between" style={{width:'100%',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:700,color:'var(--ink)'}} onClick={()=>setOpen(v=>!v)}>
+        <span>ℹ️ 关于与免责声明</span>
+        <span style={{fontSize:12,color:'var(--text-soft)'}}>{open?'收起 ▲':'展开 ▼'}</span>
+      </button>
+      {open && (
+        <div className="fade-in mt-3" style={{fontSize:12,lineHeight:1.8,color:'var(--text-soft)'}}>
+          <p style={{marginBottom:8}}><b style={{color:'var(--ink)'}}>用途说明：</b>本工具为三升四年级小学生暑假语文预习的辅助打卡应用，依据人教部编版四年级上册教材单元结构编排，仅用于学习计划管理与进度记录。</p>
+          <p style={{marginBottom:8}}><b style={{color:'var(--ink)'}}>版权声明：</b>课文标题、单元名称等归属于教材出版方所有，本工具不收录课文原文，仅作为学习引导；推荐书目的著作权归原作者所有，请通过正规渠道购买或借阅正版图书。文言文短句为古籍公共领域内容节选。</p>
+          <p style={{marginBottom:8}}><b style={{color:'var(--ink)'}}>隐私说明：</b>所有学习记录（打卡、笔记、进度）仅保存在本机浏览器的 localStorage 中，不上传至任何服务器，不会收集任何个人信息。清除浏览器数据将删除全部记录，请及时备份。</p>
+          <p style={{marginBottom:8}}><b style={{color:'var(--ink)'}}>使用提示：</b>家长密码默认 1234，可在家长区修改；建议家长协助小学生使用，控制每日用眼时长。</p>
+          <p style={{marginBottom:0}}><b style={{color:'var(--ink)'}}>免责条款：</b>本工具按"现状"提供，不保证内容完全无误，学习效果因人而异，请以学校教学和官方教材为准。</p>
+          <p style={{marginTop:10,textAlign:'center',color:'var(--text-soft)',fontSize:11}}>© 2026 阅读打卡 · 个人学习辅助工具 · 可自由分享</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BottomNav(){
+  const { tab, setTab } = useApp();
+  const items = [
+    { key:'today', icon:'☀️', label:'今日' },
+    { key:'calendar', icon:'📅', label:'打卡' },
+    { key:'books', icon:'📚', label:'书架' },
+    { key:'notes', icon:'📝', label:'笔记' },
+    { key:'stats', icon:'🏆', label:'成就' },
+  ];
+  return (
+    <nav className="bottom-nav">
+      <div className="bottom-nav-inner">
+        {items.map(it=>(
+          <button key={it.key} className={`nav-item ${tab===it.key?'active':''}`} onClick={()=>setTab(it.key)}>
+            <div className="nav-ico">{it.icon}</div>
+            <span>{it.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function Root(){
+  const store = useStore();
+  return (
+    <AppCtx.Provider value={store}>
+      <AppShell />
+    </AppCtx.Provider>
+  );
+}
+
+function bootstrap(){
+  const s = loadState();
+  if(!s.startDate){ s.startDate = todayStr(); saveState(s); }
+}
+
+bootstrap();
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+
+// 渲染完成后隐藏加载提示
+setTimeout(()=>{ const el=document.getElementById('loading'); if(el) el.style.display='none'; }, 300);
+</script>
+</body>
+</html>
